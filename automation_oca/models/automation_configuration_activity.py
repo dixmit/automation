@@ -22,6 +22,7 @@ class AutomationConfigurationActivity(models.Model):
     )
     applied_domain = fields.Char(
         compute="_compute_applied_domain",
+        recursive=True,
     )
     parent_id = fields.Many2one("automation.configuration.activity")
     model_id = fields.Many2one(related="configuration_id.model_id")
