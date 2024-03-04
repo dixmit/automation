@@ -71,7 +71,6 @@ class AutomationRecordActivity(models.Model):
             traceback.print_exc(file=buff)
             traceback_txt = buff.getvalue()
             self.write({"state": "error", "error_trace": traceback_txt})
-            raise
 
     def _run_mail(self):
         author_id = self.configuration_activity_id.mail_author_id.id
