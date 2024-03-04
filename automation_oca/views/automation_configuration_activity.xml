@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2024 Dixmit
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
+<odoo>
+
+    <record model="ir.ui.view" id="automation_configuration_activity_form_view">
+        <field name="model">automation.configuration.activity</field>
+        <field name="arch" type="xml">
+            <form>
+                <header />
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field
+                                name="name"
+                                placeholder="e.g. Remember unpaid invoices"
+                            /></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="activity_type" />
+                            <field name="model_id" invisible="1" />
+                            <field name="model" invisible="1" />
+                            <field
+                                name="server_action_id"
+                                attrs="{'invisible':[('activity_type', '!=', 'action')], 'required': [('activity_type', '=', 'action')]}"
+                            />
+                            <field
+                                name="mail_template_id"
+                                attrs="{'invisible':[('activity_type', '!=', 'mail')], 'required': [('activity_type', '=', 'mail')]}"
+                            />
+                            <field
+                                name="mail_author_id"
+                                attrs="{'invisible':[('activity_type', '!=', 'mail')]}"
+                            />
+                        </group>
+                        <group>
+                            <label for="trigger_interval" string="Trigger" />
+                            <div class="container ps-0">
+                                <div class="row">
+                                    <div class="col-2"><field
+                                            name="trigger_interval"
+                                            nolabel="1"
+                                        /></div>
+                                    <div class="col-10"><field
+                                            name="trigger_interval_type"
+                                            nolabel="1"
+                                        /></div>
+                                </div>
+                                <div class="row">
+                                    <span class="col-2">after</span>
+                                    <div class="col-10"><field
+                                            name="trigger_type"
+                                            nolabel="1"
+                                        /></div>
+                                </div>
+                            </div>
+                            <field name="parent_id" />
+                        </group>
+                    </group>
+                    <group>
+                        <field
+                            name="domain"
+                            widget="domain"
+                            options="{'foldable': True, 'model': 'model'}"
+                        />
+                        <field
+                            name="applied_domain"
+                            widget="domain"
+                            options="{'foldable': True, 'model': 'model'}"
+                        />
+
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="automation_configuration_activity_search_view">
+        <field name="model">automation.configuration.activity</field>
+        <field name="arch" type="xml">
+            <search>
+                <!-- TODO -->
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="automation_configuration_activity_tree_view">
+        <field name="model">automation.configuration.activity</field>
+        <field name="arch" type="xml">
+            <tree>
+                <!-- TODO -->
+                <field name="name" />
+            </tree>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2024 Dixmit
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
+<odoo>
+
+    <record model="ir.ui.view" id="automation_configuration_form_view">
+        <field name="model">automation.configuration</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button
+                        type="object"
+                        name="start_automation"
+                        class="btn-primary"
+                        string="Start"
+                        attrs="{'invisible': [('state', '!=', 'draft')]}"
+                    />
+                    <button
+                        type="object"
+                        name="run_automation"
+                        class="btn-primary"
+                        string="Run"
+                        attrs="{'invisible': [('state', '!=', 'run')]}"
+                    />
+                    <field name="state" widget="statusbar" />
+                </header>
+                <sheet>
+                    <div name="button_box">
+                        <button
+                            name="%(automation_record_configuration_act_window)s"
+                            type="action"
+                            class="oe_stat_button"
+                            icon="fa-envelope"
+                            attrs="{'invisible': [('record_count', '=', 0)]}"
+                        >
+                            <field
+                                name="record_count"
+                                widget="statinfo"
+                                string="Records"
+                            />
+                        </button>
+                    </div>
+                    <widget
+                        name="web_ribbon"
+                        title="Archived"
+                        bg_color="text-bg-danger"
+                        attrs="{'invisible': [('active', '=', True)]}"
+                    />
+                    <div class="oe_title">
+                        <h1><field
+                                name="name"
+                                placeholder="e.g. Remember unpaid invoices"
+                            /></h1>
+                    </div>
+                    <group>
+                        <field name="active" invisible="1" />
+                        <field
+                            name="model_id"
+                            options="{'no_create_edit': True, 'no_open': True}"
+                        />
+                        <field name="model" invisible="1" />
+                        <field
+                            name="field_id"
+                            string="Unicity based on"
+                            options="{'no_create_edit': True, 'no_open': True}"
+                        />
+                        <field
+                            name="domain"
+                            widget="domain"
+                            options="{'foldable': True, 'model': 'model'}"
+                        />
+                        <field name="company_id" groups="base.group_multi_company" />
+                    </group>
+                    <field name="automation_activity_ids" />
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" />
+                    <field name="message_ids" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="automation_configuration_search_view">
+        <field name="model">automation.configuration</field>
+        <field name="arch" type="xml">
+            <search>
+                <!-- TODO -->
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="automation_configuration_tree_view">
+        <field name="model">automation.configuration</field>
+        <field name="arch" type="xml">
+            <tree>
+                <!-- TODO -->
+                <field name="name" />
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="automation_configuration_act_window">
+        <field name="name">Automation Configuration</field> <!-- TODO -->
+        <field name="res_model">automation.configuration</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <record model="ir.ui.menu" id="automation_configuration_menu">
+        <field name="name">Automation Configuration</field>
+        <field
+            name="parent_id"
+            ref="automation_configuration_root_menu"
+        /> <!-- TODO -->
+        <field name="action" ref="automation_configuration_act_window" />
+        <field name="sequence" eval="10" /> <!-- TODO -->
+    </record>
+
+</odoo>

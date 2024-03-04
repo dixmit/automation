@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright 2024 Dixmit
+     License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
+<odoo>
+
+    <record model="ir.ui.view" id="automation_record_activity_form_view">
+        <field name="model">automation.record.activity</field>
+        <field name="arch" type="xml">
+            <form create="0">
+                <header>
+                    <field name="state" widget="statusbar" />
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name" />
+                        <field name="scheduled_date" />
+                        <field name="processed_on" />
+                        <field name="activity_type" />
+                        <field
+                            name="message_id"
+                            attrs="{'invisible': [('activity_type', '!=', 'mail')]}"
+                        />
+                    </group>
+                    <group
+                        name="error"
+                        string="Error"
+                        attrs="{'invisible': [('state', '!=', 'error')]}"
+                    >
+                        <field name="error_trace" nolabel="1" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="automation_record_activity_tree_view">
+        <field name="model">automation.record.activity</field>
+        <field name="arch" type="xml">
+            <tree create="0">
+                <field name="name" />
+                <field name="state" />
+                <button
+                    name="run"
+                    type="object"
+                    string="Run"
+                    attrs="{'invisible': [('state', '!=', 'scheduled')]}"
+                />
+            </tree>
+        </field>
+    </record>
+
+</odoo>
