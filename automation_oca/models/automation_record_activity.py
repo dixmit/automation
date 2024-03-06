@@ -52,25 +52,27 @@ class AutomationRecordActivity(models.Model):
         try:
             getattr(self, "_run_%s" % self.configuration_activity_id.activity_type)()
             self.write({"state": "done", "processed_on": fields.Datetime.now()})
-            self.record_id.write(
-                {
-                    "automation_activity_ids": [
-                        (
-                            0,
-                            0,
-                            activity._create_record_activity_vals(
-                                self.record_id.resource_ref, parent_id=self.id
-                            ),
-                        )
-                        for activity in self.configuration_activity_id.child_ids
-                    ]
-                }
-            )
         except Exception:
             buff = StringIO()
             traceback.print_exc(file=buff)
             traceback_txt = buff.getvalue()
             self.write({"state": "error", "error_trace": traceback_txt})
+
+    def _fill_childs(self, **kwargs):
+        self.record_id.write(
+            {
+                "automation_activity_ids": [
+                    (
+                        0,
+                        0,
+                        activity._create_record_activity_vals(
+                            self.record_id.resource_ref, parent_id=self.id, **kwargs
+                        ),
+                    )
+                    for activity in self.configuration_activity_id.child_ids
+                ]
+            }
+        )
 
     def _run_mail(self):
         author_id = self.configuration_activity_id.mail_author_id.id
@@ -100,6 +102,7 @@ class AutomationRecordActivity(models.Model):
         # auto-commit except in testing mode
         auto_commit = not getattr(threading.current_thread(), "testing", False)
         composer._action_send_mail(auto_commit=auto_commit)
+        self._fill_childs(message_id=self.message_id)
         return
 
     def _run_mail_context(self):
@@ -110,6 +113,7 @@ class AutomationRecordActivity(models.Model):
             active_model=self.record_id.model,
             active_ids=[self.record_id.res_id],
         ).run()
+        self._fill_childs()
 
     def _cron_automation_activities(self):
         for activity in self.search(
@@ -119,3 +123,23 @@ class AutomationRecordActivity(models.Model):
             ]
         ):
             activity.run()
+
+    def _run_mail_open(self):
+        # TODO
+        self._fill_childs()
+
+    def _run_mail_not_open(self):
+        # TODO
+        self._fill_childs()
+
+    def _run_mail_click(self):
+        # TODO
+        self._fill_childs()
+
+    def _run_mail_not_clicked(self):
+        # TODO
+        self._fill_childs()
+
+    def _run_mail_bounce(self):
+        # TODO
+        self._fill_childs()

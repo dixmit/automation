@@ -18,7 +18,7 @@
                         <field name="activity_type" />
                         <field
                             name="message_id"
-                            attrs="{'invisible': [('activity_type', '!=', 'mail')]}"
+                            attrs="{'invisible': [('message_id', '=', False)]}"
                         />
                     </group>
                     <group

@@ -252,7 +252,7 @@
                                                 class="o_automation_kanban_child_add_buttons"
                                             >
                                                 <div
-                                                    t-on-click="() => this.addNewChild({trigger_type: 'activity'})"
+                                                    trigger-type="activity"
                                                     class="text-success o_automation_kanban_child_add_button"
                                                 >
                                                     <i
@@ -264,7 +264,7 @@
                                                 </div>
                                                 <div
                                                     t-if="record.activity_type.raw_value == 'mail'"
-                                                    data-trigger-type="mail_open"
+                                                    trigger-type="mail_open"
                                                     class="text-success o_automation_kanban_child_add_button"
                                                 >
                                                     <i
@@ -276,7 +276,7 @@
                                                 </div>
                                                 <div
                                                     t-if="record.activity_type.raw_value == 'mail'"
-                                                    data-trigger-type="mail_not_open"
+                                                    trigger-type="mail_not_open"
                                                     class="text-danger o_automation_kanban_child_add_button"
                                                 >
                                                     <i
@@ -288,7 +288,7 @@
                                                 </div>
                                                 <div
                                                     t-if="record.activity_type.raw_value == 'mail'"
-                                                    data-trigger-type="mail_reply"
+                                                    trigger-type="mail_reply"
                                                     type="new_child"
                                                     class="text-success o_automation_kanban_child_add_button"
                                                 >
@@ -301,7 +301,7 @@
                                                 </div>
                                                 <div
                                                     t-if="record.activity_type.raw_value == 'mail'"
-                                                    data-trigger-type="mail_not_reply"
+                                                    trigger-type="mail_not_reply"
                                                     class="text-danger o_automation_kanban_child_add_button"
                                                 >
                                                     <i
@@ -313,7 +313,7 @@
                                                 </div>
                                                 <div
                                                     t-if="record.activity_type.raw_value == 'mail'"
-                                                    data-trigger-type="mail_click"
+                                                    trigger-type="mail_click"
                                                     class="text-success o_automation_kanban_child_add_button"
                                                 >
                                                     <i
@@ -325,7 +325,7 @@
                                                 </div>
                                                 <div
                                                     t-if="record.activity_type.raw_value == 'mail'"
-                                                    data-trigger-type="mail_not_click"
+                                                    trigger-type="mail_not_click"
                                                     class="text-danger o_automation_kanban_child_add_button"
                                                 >
                                                     <i
@@ -337,7 +337,7 @@
                                                 </div>
                                                 <div
                                                     t-if="record.activity_type.raw_value == 'mail'"
-                                                    data-trigger-type="mail_bounce"
+                                                    trigger-type="mail_bounce"
                                                     class="text-danger o_automation_kanban_child_add_button"
                                                 >
                                                     <i
