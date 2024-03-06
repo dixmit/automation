@@ -1,0 +1,81 @@
+.o_automation_kanban {
+    .o_kanban_record {
+        flex: 0 0 100%;
+        > div {
+            border: none;
+        }
+        .o_automation_kanban_box {
+            display: flex;
+            .o_automation_kanban_extra {
+                flex-direction: column;
+            }
+            .o_automation_kanban_time {
+                flex-direction: column;
+                border: 1px solid $gray-300;
+                width: 7rem;
+                height: fit-content;
+            }
+            .o_automation_kanban_card {
+                border: 1px solid $gray-300;
+                flex-grow: 1;
+                flex-basis: 0;
+                flex-shrink: 0;
+                flex-direction: column;
+                .o_automation_kanban_card_position {
+                    position: relative;
+                    top: 0px;
+                    left: -2rem;
+                }
+                .o_automation_kanban_header {
+                    position: relative;
+                    .o_automation_kanban_header_icon {
+                        display: inline-block;
+                        background-color: black;
+                        padding: 3px 7px;
+                        margin: 5px;
+                        width: 28px;
+                        height: 28px;
+                        color: white;
+                        font-size: 14px;
+                        border-radius: 3px;
+                        background: $o-brand-odoo;
+                    }
+                    .o_automation_kanban_header_title {
+                        display: inline-block;
+                        position: absolute;
+                        top: auto;
+                        left: auto;
+                        bottom: auto;
+                        right: auto;
+                    }
+                    .o_automation_kanban_header_actions {
+                        position: absolute;
+                        top: 0px;
+                        left: auto;
+                        bottom: auto;
+                        right: 0px;
+                    }
+                }
+                .o_automation_kanban_child_add {
+                    .o_automation_kanban_child_add_title {
+                        padding: 2px;
+                    }
+                    .o_automation_kanban_child_add_buttons {
+                        display: none;
+                    }
+                }
+                .o_automation_kanban_child_add:hover {
+                    .o_automation_kanban_child_add_buttons {
+                        display: flex;
+                        .o_automation_kanban_child_add_button {
+                            flex-grow: 1;
+                            flex-basis: 0;
+                            flex-shrink: 0;
+                            flex-direction: column;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

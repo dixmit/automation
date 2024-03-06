@@ -21,5 +21,11 @@
         "views/automation_configuration.xml",
         "data/cron.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "automation_oca/static/src/**/*.js",
+            "automation_oca/static/src/**/*.scss",
+        ],
+    },
     "demo": [],
 }

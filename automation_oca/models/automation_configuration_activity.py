@@ -12,6 +12,7 @@ class AutomationConfigurationActivity(models.Model):
 
     _name = "automation.configuration.activity"
     _description = "Automation Activity"
+    _order = "trigger_interval_hours ASC"
 
     name = fields.Char(required=True)
     configuration_id = fields.Many2one(
@@ -32,6 +33,9 @@ class AutomationConfigurationActivity(models.Model):
     )
     activity_type = fields.Selection(
         [("mail", "Mail"), ("action", "Server Action")], required=True, default="mail"
+    )
+    trigger_interval_hours = fields.Integer(
+        compute="_compute_trigger_interval_hours", store=True
     )
     trigger_interval = fields.Integer()
     trigger_interval_type = fields.Selection(
@@ -63,8 +67,30 @@ class AutomationConfigurationActivity(models.Model):
     server_action_id = fields.Many2one(
         "ir.actions.server", domain="[('model_id', '=', model_id)]"
     )
+    parent_position = fields.Integer(
+        compute="_compute_parent_position", recursive=True, store=True
+    )
 
-    @api.depends("domain", "configuration_id.domain", "parent_id.applied_domain")
+    @api.depends("trigger_interval", "trigger_interval_type")
+    def _compute_trigger_interval_hours(self):
+        for record in self:
+            record.trigger_interval_hours = record._get_trigger_interval_hours()
+
+    def _get_trigger_interval_hours(self):
+        if self.trigger_interval_type == "days":
+            return self.trigger_interval * 24
+        return self.trigger_interval
+
+    @api.depends("parent_id", "parent_id.parent_position")
+    def _compute_parent_position(self):
+        for record in self:
+            record.parent_position = (
+                (record.parent_id.parent_position + 1) if record.parent_id else 0
+            )
+
+    @api.depends(
+        "domain", "configuration_id.domain", "parent_id", "parent_id.applied_domain"
+    )
     def _compute_applied_domain(self):
         for record in self:
             record.applied_domain = expression.AND(
