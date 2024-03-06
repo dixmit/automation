@@ -25,7 +25,7 @@ class AutomationConfigurationActivity(models.Model):
         compute="_compute_applied_domain",
         recursive=True,
     )
-    parent_id = fields.Many2one("automation.configuration.activity")
+    parent_id = fields.Many2one("automation.configuration.activity", ondelete="cascade")
     model_id = fields.Many2one(related="configuration_id.model_id")
     model = fields.Char(related="model_id.model")
     child_ids = fields.One2many(

@@ -1,5 +1,6 @@
 /** @odoo-module */
 
+import {AutomationKanbanRecord} from "./automation_kanban_record.esm";
 import {KanbanRenderer} from "@web/views/kanban/kanban_renderer";
 
 export class AutomationKanbanRenderer extends KanbanRenderer {
@@ -7,10 +8,6 @@ export class AutomationKanbanRenderer extends KanbanRenderer {
     Here we are going to reorder the items in the proper way and
     we will show the items with the proper padding
     */
-    setup() {
-        super.setup();
-    }
-    // Ordering the records properly
     getGroupsOrRecords() {
         return this._sortRecordsHierarchy(this.props.list.records, false).map(
             (record) => ({
@@ -21,6 +18,9 @@ export class AutomationKanbanRenderer extends KanbanRenderer {
     }
     _sortRecordsHierarchy(records, parent_id) {
         return records.flatMap((record) => {
+            if (!record.data.id) {
+                return [];
+            }
             if (record.data.parent_id && record.data.parent_id[0] !== parent_id) {
                 return [];
             }
@@ -31,3 +31,8 @@ export class AutomationKanbanRenderer extends KanbanRenderer {
         });
     }
 }
+
+AutomationKanbanRenderer.components = {
+    ...AutomationKanbanRenderer.components,
+    KanbanRecord: AutomationKanbanRecord,
+};

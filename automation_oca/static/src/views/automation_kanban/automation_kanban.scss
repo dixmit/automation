@@ -1,6 +1,7 @@
 .o_automation_kanban {
-    .o_kanban_record {
+    .o_kanban_renderer.o_kanban_ungrouped .o_kanban_record {
         flex: 0 0 100%;
+        margin: 0px;
         > div {
             border: none;
         }
@@ -8,12 +9,27 @@
             display: flex;
             .o_automation_kanban_extra {
                 flex-direction: column;
+                width: 10rem;
+            }
+            .o_automation_kanban_position_line {
+                border-right: 3px dotted $gray-300;
+                top: -0.5rem;
+                bottom: 0.5rem;
+                width: 8.75rem;
+                position: absolute;
+            }
+            .o_automation_kanban_card_position {
+                position: absolute;
+                top: 1.5rem;
+                text-align: right;
+                width: 9.125rem;
             }
             .o_automation_kanban_time {
                 flex-direction: column;
-                border: 1px solid $gray-300;
-                width: 7rem;
-                height: fit-content;
+                .o_automation_kanban_time_info {
+                    border: 1px solid $gray-300;
+                    width: 7rem;
+                }
             }
             .o_automation_kanban_card {
                 border: 1px solid $gray-300;
@@ -21,16 +37,10 @@
                 flex-basis: 0;
                 flex-shrink: 0;
                 flex-direction: column;
-                .o_automation_kanban_card_position {
-                    position: relative;
-                    top: 0px;
-                    left: -2rem;
-                }
                 .o_automation_kanban_header {
                     position: relative;
                     .o_automation_kanban_header_icon {
                         display: inline-block;
-                        background-color: black;
                         padding: 3px 7px;
                         margin: 5px;
                         width: 28px;
@@ -68,10 +78,12 @@
                     .o_automation_kanban_child_add_buttons {
                         display: flex;
                         .o_automation_kanban_child_add_button {
+                            cursor: pointer;
                             flex-grow: 1;
                             flex-basis: 0;
                             flex-shrink: 0;
                             flex-direction: column;
+                            border: 1px solid $gray-300;
                         }
                     }
                 }

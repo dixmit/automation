@@ -89,93 +89,97 @@
                             <templates>
                                 <div
                                     t-name="kanban-box"
-                                    class="o_automation_kanban_box"
+                                    class="o_automation_kanban_box p-2"
                                 >
                                     <div
                                         class="o_automation_kanban_extra"
-                                        t-attf-style="width: {{record.parent_position.raw_value * 10}}rem"
-                                    />
-                                    <div
-                                        class="me-5 p-2 text-center o_automation_kanban_time"
+                                        t-foreach="[...Array(record.parent_position.raw_value).keys()]"
+                                        t-as="extra"
+                                        t-key="extra"
                                     >
-                                        <t
-                                            t-if="record.trigger_type.raw_value == 'mail_open'"
+                                        <div
+                                            class="o_automation_kanban_position_line"
+                                        />
+                                    </div>
+                                    <div class="me-5 o_automation_kanban_time">
+                                        <div
+                                            class="o_automation_kanban_position_line"
+                                        />
+                                        <i
+                                            class="o_automation_kanban_card_position fa fa-circle text-info text-right"
+                                        />
+                                        <div
+                                            class="p-2 o_automation_kanban_time_info text-center"
                                         >
-                                            <div class="text-success">
+                                            <div
+                                                class="text-success"
+                                                t-if="record.trigger_type.raw_value == 'mail_open'"
+                                            >
                                                 <i
                                                     class="fa fa-envelope-open-o"
                                                 /> Opened after
                                             </div>
-                                        </t>
-                                        <t
-                                            t-if="record.trigger_type.raw_value == 'mail_reply'"
-                                        >
-                                            <div class="text-success">
+                                            <div
+                                                class="text-success"
+                                                t-if="record.trigger_type.raw_value == 'mail_reply'"
+                                            >
                                                 <i class="fa fa-reply" /> Replied after
                                             </div>
-                                        </t>
-                                        <t
-                                            t-if="record.trigger_type.raw_value == 'mail_click'"
-                                        >
-                                            <div class="text-success">
+                                            <div
+                                                class="text-success"
+                                                t-if="record.trigger_type.raw_value == 'mail_click'"
+                                            >
                                                 <i
                                                     class="fa fa-hand-pointer-o"
                                                 /> Clicked after
                                             </div>
-                                        </t>
-                                        <t
-                                            t-if="record.trigger_type.raw_value == 'mail_not_open'"
-                                        >
-                                            <div class="text-danger">
+                                            <div
+                                                class="text-danger"
+                                                t-if="record.trigger_type.raw_value == 'mail_not_open'"
+                                            >
                                                 <i
                                                     class="fa fa-envelope-open-o"
                                                 /> Not opened within
                                             </div>
-                                        </t>
-                                        <t
-                                            t-if="record.trigger_type.raw_value == 'mail_not_reply'"
-                                        >
-                                            <div class="text-danger">
+                                            <div
+                                                class="text-danger"
+                                                t-if="record.trigger_type.raw_value == 'mail_not_reply'"
+                                            >
                                                 <i
                                                     class="fa fa-reply"
                                                 /> Not replied within
                                             </div>
-                                        </t>
-                                        <t
-                                            t-if="record.trigger_type.raw_value == 'mail_not_click'"
-                                        >
-                                            <div class="text-danger">
+                                            <div
+                                                class="text-danger"
+                                                t-if="record.trigger_type.raw_value == 'mail_not_click'"
+                                            >
                                                 <i
                                                     class="fa fa-hand-pointer-o"
                                                 /> Not clicked within
                                             </div>
-                                        </t>
-                                        <t
-                                            t-if="record.trigger_type.raw_value == 'mail_bounce'"
-                                        >
-                                            <div class="text-danger">
+                                            <div
+                                                class="text-danger"
+                                                t-if="record.trigger_type.raw_value == 'mail_bounce'"
+                                            >
                                                 <i
                                                     class="fa fa-exclamation-circle"
                                                 /> Bounced after
                                             </div>
-                                        </t>
-                                        <strong>
-                                            <i
-                                                class="fa fa-clock-o pe-1"
-                                                role="img"
-                                                aria-label="Select time"
-                                                title="Select time"
-                                            />
-                                            <span class="pe-1"><field
-                                                    name="trigger_interval"
-                                                /></span>
-                                            <field name="trigger_interval_type" />
-                                        </strong>
+                                            <strong>
+                                                <i
+                                                    class="fa fa-clock-o pe-1"
+                                                    role="img"
+                                                    aria-label="Select time"
+                                                    title="Select time"
+                                                />
+                                                <span class="pe-1"><field
+                                                        name="trigger_interval"
+                                                    /></span>
+                                                <field name="trigger_interval_type" />
+                                            </strong>
+                                        </div>
                                     </div>
                                     <div class="o_automation_kanban_card">
-                                        <i
-                                            class="o_automation_kanban_card_position fa fa-circle text-info"
-                                        />
                                         <div class="o_automation_kanban_header">
                                             <div
                                                 class="o_automation_kanban_header_icon"
@@ -248,7 +252,7 @@
                                                 class="o_automation_kanban_child_add_buttons"
                                             >
                                                 <div
-                                                    data-trigger-type="activity"
+                                                    t-on-click="() => this.addNewChild({trigger_type: 'activity'})"
                                                     class="text-success o_automation_kanban_child_add_button"
                                                 >
                                                     <i
@@ -285,6 +289,7 @@
                                                 <div
                                                     t-if="record.activity_type.raw_value == 'mail'"
                                                     data-trigger-type="mail_reply"
+                                                    type="new_child"
                                                     class="text-success o_automation_kanban_child_add_button"
                                                 >
                                                     <i
