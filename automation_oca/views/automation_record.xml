@@ -36,6 +36,8 @@
                             <field name="parent_id" />
                             <field name="trigger_type" />
                             <field name="parent_position" />
+                            <field name="mail_status" />
+                            <field name="state" />
                             <templates>
                                 <div
                                     t-name="kanban-box"
@@ -57,6 +59,7 @@
                                         />
                                         <i
                                             class="o_automation_kanban_card_position fa fa-circle text-info text-right"
+                                            title="Run on"
                                         />
                                         <div
                                             class="p-2 o_automation_kanban_time_info text-center"
@@ -71,7 +74,7 @@
                                                     class="text-primary"
                                                 >
                                                     <i
-                                                        t-attf-class="fa fa-exclamation-circle"
+                                                        class="fa fa-exclamation-circle"
                                                     /> Not bounced yet
                                                 </span>
                                                 <span
@@ -79,7 +82,7 @@
                                                     class="text-primary"
                                                 >
                                                         <i
-                                                        t-attf-class="fa fa-envelope-open-o"
+                                                        class="fa fa-envelope-open-o"
                                                     /> Not opened yet
                                                     </span>
                                                 <span
@@ -87,7 +90,7 @@
                                                     class="text-primary"
                                                 >
                                                     <i
-                                                        t-attf-class="fa fa-reply"
+                                                        class="fa fa-reply"
                                                     /> Not replied yet
                                                 </span>
                                                 <span
@@ -95,7 +98,7 @@
                                                     class="text-primary"
                                                 >
                                                     <i
-                                                        t-attf-class="fa fa-hand-pointer"
+                                                        class="fa fa-hand-pointer"
                                                     /> Not clicked yet
                                                 </span>
                                             </strong>
@@ -140,11 +143,27 @@
                                                     type="object"
                                                     name="run"
                                                     class="fa fa-play"
+                                                    title="Run"
+                                                    t-if="record.state.raw_value == 'scheduled'"
                                                 />
                                             </div>
                                         </div>
                                         <div class="o_automation_kanban_graph">
-                                            <span>TO BE FILLED</span>
+                                            <div
+                                                class="row"
+                                                t-if="record.activity_type.raw_value == 'mail' and record.state.raw_value == 'done'"
+                                            >
+
+                                                <div
+                                                    t-attf-class="col {{ record.mail_status.raw_value != 'bounced' ? 'text-success': 'text-danger' }}"
+                                                >Sent</div>
+                                                <div
+                                                    t-attf-class="col {{ record.mail_status.raw_value == 'bounced' ? 'text-danger' : '' }}"
+                                                >Bounced</div>
+                                                <div
+                                                    t-attf-class="col {{ record.mail_status.raw_value != 'open' ? 'text-success' : '' }}"
+                                                >Opened</div>
+                                            </div>
                                         </div>
 
                                         <div

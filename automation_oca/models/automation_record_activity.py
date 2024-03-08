@@ -4,9 +4,10 @@ import threading
 import traceback
 from io import StringIO
 
+import werkzeug.urls
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, tools
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -48,12 +49,14 @@ class AutomationRecordActivity(models.Model):
         [
             ("sent", "Sent"),
             ("open", "Opened"),
-            ("reply", "Replied"),
             ("bounce", "Bounced"),
-            ("error", "Exception"),
-            ("cancel", "Canceled"),
-        ]
+            ("reply", "Replied"),
+        ],
+        readonly=True,
     )
+    mail_clicked_on = fields.Datetime(readonly=True)
+    mail_replied_on = fields.Datetime(readonly=True)
+    mail_opened_on = fields.Datetime(readonly=True)
 
     @api.depends("parent_id", "parent_id.parent_position")
     def _compute_parent_position(self):
@@ -61,6 +64,24 @@ class AutomationRecordActivity(models.Model):
             record.parent_position = (
                 (record.parent_id.parent_position + 1) if record.parent_id else 0
             )
+
+    def _check_to_execute(self):
+        if (
+            self.configuration_activity_id.trigger_type == "mail_not_open"
+            and self.parent_id.mail_status in ["open", "reply"]
+        ):
+            return False
+        if (
+            self.configuration_activity_id.trigger_type == "mail_not_reply"
+            and self.parent_id.mail_status == "reply"
+        ):
+            return False
+        if (
+            self.configuration_activity_id.trigger_type == "mail_not_clicked"
+            and self.parent_id.mail_clicked_on
+        ):
+            return False
+        return True
 
     def run(self):
         self.ensure_one()
@@ -71,6 +92,7 @@ class AutomationRecordActivity(models.Model):
             or not self.record_id.resource_ref.filtered_domain(
                 safe_eval(self.configuration_activity_id.applied_domain)
             )
+            or not self._check_to_execute()
         ):
             self.write({"state": "rejected"})
             return
@@ -115,13 +137,15 @@ class AutomationRecordActivity(models.Model):
             .with_context(active_ids=res_ids)
             .create(composer_values)
         )
-        update_values = composer._onchange_template_id(
-            self.configuration_activity_id.mail_template_id.id,
-            "mass_mail",
-            self.record_id.model,
-            self.record_id.res_id,
-        )["value"]
-        composer.write(update_values)
+        composer.write(
+            composer._onchange_template_id(
+                self.configuration_activity_id.mail_template_id.id,
+                "mass_mail",
+                self.record_id.model,
+                self.record_id.res_id,
+            )["value"]
+        )
+        # composer.body =
         extra_context = self._run_mail_context()
         composer = composer.with_context(active_ids=res_ids, **extra_context)
         # auto-commit except in testing mode
@@ -130,6 +154,13 @@ class AutomationRecordActivity(models.Model):
         self.mail_status = "sent"
         self._fill_childs()
         return
+
+    def _get_mail_tracking_url(self):
+        token = tools.hmac(self.env(su=True), "automation_oca-mail-open", self.id)
+        return werkzeug.urls.url_join(
+            self.get_base_url(),
+            "automation_oca/track/%s/%s/blank.gif" % (self.id, token),
+        )
 
     def _run_mail_context(self):
         return {}
@@ -161,6 +192,36 @@ class AutomationRecordActivity(models.Model):
         self.write({"mail_status": "bounce"})
         self.child_ids.filtered(
             lambda r: r.trigger_type == "mail_bounce"
+            and not r.scheduled_date
+            and r.state == "scheduled"
+        )._activate()
+
+    def _set_mail_open(self):
+        self.filtered(lambda t: t.mail_status not in ["open", "reply"]).write(
+            {"mail_status": "open", "mail_opened_on": fields.Datetime.now()}
+        )
+        self.child_ids.filtered(
+            lambda r: r.trigger_type == "mail_open"
+            and not r.scheduled_date
+            and r.state == "scheduled"
+        )._activate()
+
+    def _set_mail_clicked(self):
+        self.filtered(lambda t: not t.mail_clicked_on).write(
+            {"mail_clicked_on": fields.Datetime.now()}
+        )
+        self.child_ids.filtered(
+            lambda r: r.trigger_type == "mail_click"
+            and not r.scheduled_date
+            and r.state == "scheduled"
+        )._activate()
+
+    def _set_mail_reply(self):
+        self.filtered(lambda t: t.mail_status != "reply").write(
+            {"mail_status": "reply", "mail_replied_on": fields.Datetime.now()}
+        )
+        self.child_ids.filtered(
+            lambda r: r.trigger_type == "mail_reply"
             and not r.scheduled_date
             and r.state == "scheduled"
         )._activate()

@@ -47,6 +47,8 @@ class AutomationConfigurationActivity(models.Model):
             ("activity", "execution of another activity"),
             ("mail_open", "Mail opened"),
             ("mail_not_open", "Mail not opened"),
+            ("mail_reply", "Mail replied"),
+            ("mail_not_reply", "Mail not replied"),
             ("mail_click", "Mail clicked"),
             ("mail_not_clicked", "Mail not clicked"),
             ("mail_bounce", "Mail bounced"),
@@ -107,9 +109,10 @@ class AutomationConfigurationActivity(models.Model):
         if self.trigger_type in [
             "mail_open",
             "mail_bounce",
-            "mail_not_open",
             "mail_click",
             "mail_not_clicked",
+            "mail_reply",
+            "mail_not_reply",
         ]:
             return False
         return fields.Datetime.now() + relativedelta(
