@@ -79,9 +79,7 @@
                     >
                         <kanban>
                             <field name="id" />
-                            <field name="model" />
                             <field name="name" />
-                            <field name="domain" />
                             <field name="activity_type" />
                             <field name="parent_id" />
                             <field name="trigger_type" />

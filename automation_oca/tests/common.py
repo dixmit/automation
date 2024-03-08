@@ -60,7 +60,7 @@ class AutomationTestCase(TransactionCase):
         )
 
     @classmethod
-    def create_mail_activity(cls, parent_id=False, **kwargs):
+    def create_mail_activity(cls, parent_id=False, trigger_type=False, **kwargs):
         return cls.env["automation.configuration.activity"].create(
             {
                 "name": "Demo activity",
@@ -68,7 +68,7 @@ class AutomationTestCase(TransactionCase):
                 "configuration_id": cls.configuration.id,
                 "activity_type": "mail",
                 "mail_template_id": cls.template.id,
-                "trigger_type": "activity" if parent_id else "start",
+                "trigger_type": trigger_type or ("activity" if parent_id else "start"),
                 **kwargs,
             }
         )

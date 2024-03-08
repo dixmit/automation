@@ -4,13 +4,16 @@ import threading
 import traceback
 from io import StringIO
 
-from odoo import fields, models
+from dateutil.relativedelta import relativedelta
+
+from odoo import api, fields, models
 from odoo.tools.safe_eval import safe_eval
 
 
 class AutomationRecordActivity(models.Model):
     _name = "automation.record.activity"
     _description = "Activities done on the record"
+    _order = "scheduled_date DESC"
 
     name = fields.Char(related="configuration_activity_id.name")
     record_id = fields.Many2one("automation.record", required=True, ondelete="cascade")
@@ -18,12 +21,11 @@ class AutomationRecordActivity(models.Model):
         "automation.configuration.activity", required=True
     )
     activity_type = fields.Selection(related="configuration_activity_id.activity_type")
-    scheduled_date = fields.Datetime(required=True, readonly=True)
+    scheduled_date = fields.Datetime(readonly=True)
     processed_on = fields.Datetime(readonly=True)
-
     parent_id = fields.Many2one("automation.record.activity", readonly=True)
     child_ids = fields.One2many("automation.record.activity", inverse_name="parent_id")
-    message_id = fields.Char(readonly=True)
+    trigger_type = fields.Selection(related="configuration_activity_id.trigger_type")
     state = fields.Selection(
         [
             ("scheduled", "Scheduled"),
@@ -36,6 +38,29 @@ class AutomationRecordActivity(models.Model):
         readonly=True,
     )
     error_trace = fields.Text(readonly=True)
+    parent_position = fields.Integer(
+        compute="_compute_parent_position", recursive=True, store=True
+    )
+
+    # Mailing fields
+    message_id = fields.Char(readonly=True)
+    mail_status = fields.Selection(
+        [
+            ("sent", "Sent"),
+            ("open", "Opened"),
+            ("reply", "Replied"),
+            ("bounce", "Bounced"),
+            ("error", "Exception"),
+            ("cancel", "Canceled"),
+        ]
+    )
+
+    @api.depends("parent_id", "parent_id.parent_position")
+    def _compute_parent_position(self):
+        for record in self:
+            record.parent_position = (
+                (record.parent_id.parent_position + 1) if record.parent_id else 0
+            )
 
     def run(self):
         self.ensure_one()
@@ -102,7 +127,8 @@ class AutomationRecordActivity(models.Model):
         # auto-commit except in testing mode
         auto_commit = not getattr(threading.current_thread(), "testing", False)
         composer._action_send_mail(auto_commit=auto_commit)
-        self._fill_childs(message_id=self.message_id)
+        self.mail_status = "sent"
+        self._fill_childs()
         return
 
     def _run_mail_context(self):
@@ -124,22 +150,17 @@ class AutomationRecordActivity(models.Model):
         ):
             activity.run()
 
-    def _run_mail_open(self):
-        # TODO
-        self._fill_childs()
+    def _activate(self):
+        for record in self.filtered(lambda r: not r.scheduled_date):
+            config = record.configuration_activity_id
+            record.scheduled_date = fields.Datetime.now() + relativedelta(
+                **{config.trigger_interval_type: config.trigger_interval}
+            )
 
-    def _run_mail_not_open(self):
-        # TODO
-        self._fill_childs()
-
-    def _run_mail_click(self):
-        # TODO
-        self._fill_childs()
-
-    def _run_mail_not_clicked(self):
-        # TODO
-        self._fill_childs()
-
-    def _run_mail_bounce(self):
-        # TODO
-        self._fill_childs()
+    def _set_mail_bounced(self):
+        self.write({"mail_status": "bounce"})
+        self.child_ids.filtered(
+            lambda r: r.trigger_type == "mail_bounce"
+            and not r.scheduled_date
+            and r.state == "scheduled"
+        )._activate()

@@ -103,10 +103,22 @@ class AutomationConfigurationActivity(models.Model):
                 ]
             )
 
+    def _get_record_activity_scheduled_date(self):
+        if self.trigger_type in [
+            "mail_open",
+            "mail_bounce",
+            "mail_not_open",
+            "mail_click",
+            "mail_not_clicked",
+        ]:
+            return False
+        return fields.Datetime.now() + relativedelta(
+            **{self.trigger_interval_type: self.trigger_interval}
+        )
+
     def _create_record_activity_vals(self, record, **kwargs):
         return {
             "configuration_activity_id": self.id,
-            "scheduled_date": fields.Datetime.now()
-            + relativedelta(**{self.trigger_interval_type: self.trigger_interval}),
+            "scheduled_date": self._get_record_activity_scheduled_date(),
             **kwargs,
         }
