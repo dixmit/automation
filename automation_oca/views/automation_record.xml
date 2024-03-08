@@ -146,6 +146,13 @@
                                                     title="Run"
                                                     t-if="record.state.raw_value == 'scheduled'"
                                                 />
+                                                <button
+                                                    type="object"
+                                                    name="cancel"
+                                                    class="fa fa-times"
+                                                    title="Cancel"
+                                                    t-if="record.state.raw_value == 'scheduled'"
+                                                />
                                             </div>
                                         </div>
                                         <div class="o_automation_kanban_graph">

@@ -41,6 +41,11 @@ class AutomationConfigurationActivity(models.Model):
     trigger_interval_type = fields.Selection(
         [("hours", "Hours"), ("days", "Days")], required=True, default="hours"
     )
+    expiry = fields.Boolean()
+    expiry_interval = fields.Integer()
+    expiry_interval_type = fields.Selection(
+        [("hours", "Hours"), ("days", "Days")], required=True, default="hours"
+    )
     trigger_type = fields.Selection(
         [
             ("start", "start of workflow"),
@@ -119,9 +124,17 @@ class AutomationConfigurationActivity(models.Model):
             **{self.trigger_interval_type: self.trigger_interval}
         )
 
+    def _get_expiry_date(self):
+        if not self.expiry:
+            return False
+        return fields.Datetime.now() + relativedelta(
+            **{self.expiry_interval_type: self.expiry_interval}
+        )
+
     def _create_record_activity_vals(self, record, **kwargs):
         return {
             "configuration_activity_id": self.id,
+            "expiry_date": self._get_expiry_date(),
             "scheduled_date": self._get_record_activity_scheduled_date(),
             **kwargs,
         }

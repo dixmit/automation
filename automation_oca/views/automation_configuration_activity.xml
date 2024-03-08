@@ -54,6 +54,29 @@
                                         /></div>
                                 </div>
                             </div>
+                            <field name="expiry" />
+                            <label
+                                for="expiry_interval"
+                                string="Trigger"
+                                attrs="{'invisible': [('expiry', '=', False)]}"
+                            />
+                            <div
+                                class="container ps-0"
+                                attrs="{'invisible': [('expiry', '=', False)]}"
+                            >
+                                <div class="row">
+                                    <div class="col-2"><field
+                                            name="expiry_interval"
+                                            attrs="{'required': [('expiry', '=', True)]}"
+                                            nolabel="1"
+                                        /></div>
+                                    <div class="col-10"><field
+                                            name="expiry_interval_type"
+                                            attrs="{'required': [('expiry', '=', True)]}"
+                                            nolabel="1"
+                                        /></div>
+                                </div>
+                            </div>
                             <field name="parent_id" />
                         </group>
                     </group>

@@ -23,6 +23,7 @@ class AutomationRecordActivity(models.Model):
     )
     activity_type = fields.Selection(related="configuration_activity_id.activity_type")
     scheduled_date = fields.Datetime(readonly=True)
+    expiry_date = fields.Datetime(readonly=True)
     processed_on = fields.Datetime(readonly=True)
     parent_id = fields.Many2one("automation.record.activity", readonly=True)
     child_ids = fields.One2many("automation.record.activity", inverse_name="parent_id")
@@ -31,6 +32,7 @@ class AutomationRecordActivity(models.Model):
         [
             ("scheduled", "Scheduled"),
             ("done", "Done"),
+            ("expired", "Expired"),
             ("rejected", "Rejected"),
             ("error", "Error"),
             ("cancel", "Cancelled"),
@@ -180,6 +182,19 @@ class AutomationRecordActivity(models.Model):
             ]
         ):
             activity.run()
+        self.search(
+            [
+                ("state", "=", "scheduled"),
+                ("expiry_date", "!=", False),
+                ("expiry_date", "<=", fields.Datetime.now()),
+            ]
+        )._expiry()
+
+    def _expiry(self):
+        self.write({"state": "expired"})
+
+    def cancel(self):
+        self.filtered(lambda r: r.state == "scheduled").write({"state": "cancel"})
 
     def _activate(self):
         for record in self.filtered(lambda r: not r.scheduled_date):
