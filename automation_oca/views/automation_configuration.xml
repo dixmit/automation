@@ -181,7 +181,7 @@
                                     <div class="o_automation_kanban_card">
                                         <div class="o_automation_kanban_header">
                                             <div
-                                                class="o_automation_kanban_header_icon"
+                                                class="o_automation_kanban_header_icon btn-primary"
                                             >
                                                 <span
                                                     class="fa fa-envelope"

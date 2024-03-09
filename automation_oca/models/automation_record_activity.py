@@ -14,7 +14,7 @@ from odoo.tools.safe_eval import safe_eval
 class AutomationRecordActivity(models.Model):
     _name = "automation.record.activity"
     _description = "Activities done on the record"
-    _order = "scheduled_date DESC"
+    _order = "scheduled_date ASC"
 
     name = fields.Char(related="configuration_activity_id.name")
     record_id = fields.Many2one("automation.record", required=True, ondelete="cascade")
@@ -96,7 +96,7 @@ class AutomationRecordActivity(models.Model):
             )
             or not self._check_to_execute()
         ):
-            self.write({"state": "rejected"})
+            self.write({"state": "rejected", "processed_on": fields.Datetime.now()})
             return
         try:
             getattr(self, "_run_%s" % self.configuration_activity_id.activity_type)()
@@ -105,7 +105,13 @@ class AutomationRecordActivity(models.Model):
             buff = StringIO()
             traceback.print_exc(file=buff)
             traceback_txt = buff.getvalue()
-            self.write({"state": "error", "error_trace": traceback_txt})
+            self.write(
+                {
+                    "state": "error",
+                    "error_trace": traceback_txt,
+                    "processed_on": fields.Datetime.now(),
+                }
+            )
 
     def _fill_childs(self, **kwargs):
         self.record_id.write(
@@ -191,10 +197,12 @@ class AutomationRecordActivity(models.Model):
         )._expiry()
 
     def _expiry(self):
-        self.write({"state": "expired"})
+        self.write({"state": "expired", "processed_on": fields.Datetime.now()})
 
     def cancel(self):
-        self.filtered(lambda r: r.state == "scheduled").write({"state": "cancel"})
+        self.filtered(lambda r: r.state == "scheduled").write(
+            {"state": "cancel", "processed_on": fields.Datetime.now()}
+        )
 
     def _activate(self):
         for record in self.filtered(lambda r: not r.scheduled_date):

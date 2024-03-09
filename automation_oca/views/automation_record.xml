@@ -37,6 +37,7 @@
                             <field name="trigger_type" />
                             <field name="parent_position" />
                             <field name="mail_status" />
+                            <field name="mail_clicked_on" />
                             <field name="state" />
                             <templates>
                                 <div
@@ -66,8 +67,45 @@
                                         >
                                             <strong>
                                                 <field
+                                                    class="text-success"
+                                                    name="processed_on"
+                                                    t-if="record.state.raw_value === 'done'"
+                                                />
+                                                <span
+                                                    class="text-warning"
+                                                    t-elif="record.state.raw_value == 'expired'"
+                                                >
+                                                    Expired <field
+                                                        name="processed_on"
+                                                    />
+                                                </span>
+                                                <span
+                                                    class="text-info"
+                                                    t-elif="record.state.raw_value == 'rejected'"
+                                                >
+                                                    Rejected <field
+                                                        name="processed_on"
+                                                    />
+                                                </span>
+                                                <span
+                                                    class="text-danger"
+                                                    t-elif="record.state.raw_value == 'error'"
+                                                >
+                                                    Error on <field
+                                                        name="processed_on"
+                                                    />
+                                                </span>
+                                                <span
+                                                    class="text-warning"
+                                                    t-elif="record.state.raw_value == 'cancel'"
+                                                >
+                                                    Cancelled <field
+                                                        name="processed_on"
+                                                    />
+                                                </span>
+                                                <field
                                                     name="scheduled_date"
-                                                    t-if="record.scheduled_date.value"
+                                                    t-elif="record.scheduled_date.value and record.state.raw_value === 'scheduled'"
                                                 />
                                                 <span
                                                     t-elif="record.trigger_type.raw_value == 'mail_bounce'"
@@ -107,7 +145,7 @@
                                     <div class="o_automation_kanban_card">
                                         <div class="o_automation_kanban_header">
                                             <div
-                                                class="o_automation_kanban_header_icon"
+                                                t-attf-class="o_automation_kanban_header_icon {{record.state.raw_value === 'done' ? 'btn-success': (record.state.raw_value === 'scheduled' ? 'btn-primary': (record.state.raw_value === 'error' ? 'btn-danger': (record.state.raw_value === 'rejected' ? 'btn-info': 'btn-warning')))}}"
                                             >
                                                 <span
                                                     class="fa fa-envelope"
@@ -142,148 +180,61 @@
                                                 <button
                                                     type="object"
                                                     name="run"
-                                                    class="fa fa-play"
+                                                    class="fa fa-play btn-primary o_automation_kanban_header_icon"
                                                     title="Run"
                                                     t-if="record.state.raw_value == 'scheduled'"
                                                 />
                                                 <button
                                                     type="object"
                                                     name="cancel"
-                                                    class="fa fa-times"
+                                                    class="fa fa-times btn-warning o_automation_kanban_header_icon"
                                                     title="Cancel"
                                                     t-if="record.state.raw_value == 'scheduled'"
                                                 />
                                             </div>
                                         </div>
-                                        <div class="o_automation_kanban_graph">
-                                            <div
-                                                class="row"
-                                                t-if="record.activity_type.raw_value == 'mail' and record.state.raw_value == 'done'"
-                                            >
-
-                                                <div
-                                                    t-attf-class="col {{ record.mail_status.raw_value != 'bounced' ? 'text-success': 'text-danger' }}"
-                                                >Sent</div>
-                                                <div
-                                                    t-attf-class="col {{ record.mail_status.raw_value == 'bounced' ? 'text-danger' : '' }}"
-                                                >Bounced</div>
-                                                <div
-                                                    t-attf-class="col {{ record.mail_status.raw_value != 'open' ? 'text-success' : '' }}"
-                                                >Opened</div>
-                                            </div>
-                                        </div>
-
                                         <div
-                                            t-if="!read_only_mode"
-                                            class="o_automation_kanban_child_add text-center"
+                                            class="o_automation_kanban_states"
+                                            t-if="record.activity_type.raw_value == 'mail' and record.state.raw_value == 'done'"
                                         >
                                             <div
-                                                class="o_automation_kanban_child_add_title card-footer"
-                                            >
-                                                <i
-                                                    class="fa fa-plus-circle"
-                                                /> Add child activity
-                                            </div>
+                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value != 'bounced' ? 'text-success': 'text-muted' }}"
+                                            ><i
+                                                    class="fa fa-envelope"
+                                                    title="Sent"
+                                                    role="img"
+                                                    aria-label="Sent"
+                                                /> Sent</div>
                                             <div
-                                                class="o_automation_kanban_child_add_buttons"
-                                            >
-                                                <div
-                                                    trigger-type="activity"
-                                                    class="text-success o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-code-fork fa-rotate-180 fa-flip-vertical"
-                                                        title="Add Another Activity"
-                                                        role="img"
-                                                        aria-label="Add Another Activity"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.activity_type.raw_value == 'mail'"
-                                                    trigger-type="mail_open"
-                                                    class="text-success o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-envelope-open-o"
-                                                        title="Opened"
-                                                        role="img"
-                                                        aria-label="Opened"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.activity_type.raw_value == 'mail'"
-                                                    trigger-type="mail_not_open"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-envelope-open-o "
-                                                        title="Not Opened"
-                                                        role="img"
-                                                        aria-label="Not Opened"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.activity_type.raw_value == 'mail'"
-                                                    trigger-type="mail_reply"
-                                                    type="new_child"
-                                                    class="text-success o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-reply"
-                                                        title="Replied"
-                                                        role="img"
-                                                        aria-label="Replied"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.activity_type.raw_value == 'mail'"
-                                                    trigger-type="mail_not_reply"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-reply"
-                                                        title="Not Replied"
-                                                        role="img"
-                                                        aria-label="Not Replied"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.activity_type.raw_value == 'mail'"
-                                                    trigger-type="mail_click"
-                                                    class="text-success o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-hand-pointer-o"
-                                                        title="Clicked"
-                                                        role="img"
-                                                        aria-label="Clicked"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.activity_type.raw_value == 'mail'"
-                                                    trigger-type="mail_not_click"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-hand-pointer-o"
-                                                        title="Not Clicked"
-                                                        role="img"
-                                                        aria-label="Not Clicked"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.activity_type.raw_value == 'mail'"
-                                                    trigger-type="mail_bounce"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-exclamation-circle"
-                                                        title="Bounced"
-                                                        role="img"
-                                                        aria-label="Bounced"
-                                                    />
-                                                </div>
-                                            </div>
+                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value in ['open', 'reply'] ? 'text-success' : 'text-muted' }}"
+                                            ><i
+                                                    class="fa fa-envelope-open-o"
+                                                    title="Opened"
+                                                    role="img"
+                                                    aria-label="Opened"
+                                                /> Opened</div>
+                                            <div
+                                                t-attf-class="o_automation_kanban_state {{ record.mail_clicked_on.raw_value ? 'text-success' : 'text-muted' }}"
+                                            ><i
+                                                    class="fa fa-reply"
+                                                    title="Replied"
+                                                    role="img"
+                                                    aria-label="Replied"
+                                                /> Replied</div>
+                                            <div
+                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'reply' ? 'text-success' : 'text-muted' }}"
+                                            ><i
+                                                    class="fa fa-hand-pointer-o"
+                                                    title="Clicked"
+                                                    role="img"
+                                                    aria-label="Clicked"
+                                                /> Clicked</div>
+                                            <div
+                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'bounced' ? 'text-danger' : 'text-muted' }}"
+                                            ><i
+                                                    class="fa fa-exclamation-circle"
+                                                    title="Bounced"
+                                                /> Bounced</div>
                                         </div>
                                     </div>
                                 </div>
