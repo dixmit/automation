@@ -163,11 +163,14 @@ class AutomationRecordActivity(models.Model):
         self._fill_childs()
         return
 
+    def _get_mail_tracking_token(self):
+        return tools.hmac(self.env(su=True), "automation_oca", self.id)
+
     def _get_mail_tracking_url(self):
-        token = tools.hmac(self.env(su=True), "automation_oca-mail-open", self.id)
         return werkzeug.urls.url_join(
             self.get_base_url(),
-            "automation_oca/track/%s/%s/blank.gif" % (self.id, token),
+            "automation_oca/track/%s/%s/blank.gif"
+            % (self.id, self._get_mail_tracking_token()),
         )
 
     def _run_mail_context(self):

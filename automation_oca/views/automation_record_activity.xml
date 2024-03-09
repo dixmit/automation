@@ -12,6 +12,7 @@
                 </header>
                 <sheet>
                     <group>
+                        <field name="id" />
                         <field name="name" />
                         <field name="scheduled_date" />
                         <field name="processed_on" />

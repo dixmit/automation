@@ -206,7 +206,7 @@
                                                     aria-label="Sent"
                                                 /> Sent</div>
                                             <div
-                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value in ['open', 'reply'] ? 'text-success' : 'text-muted' }}"
+                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'open' or record.mail_status.raw_value == 'reply' ? 'text-success' : 'text-muted' }}"
                                             ><i
                                                     class="fa fa-envelope-open-o"
                                                     title="Opened"
@@ -216,19 +216,19 @@
                                             <div
                                                 t-attf-class="o_automation_kanban_state {{ record.mail_clicked_on.raw_value ? 'text-success' : 'text-muted' }}"
                                             ><i
-                                                    class="fa fa-reply"
-                                                    title="Replied"
-                                                    role="img"
-                                                    aria-label="Replied"
-                                                /> Replied</div>
-                                            <div
-                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'reply' ? 'text-success' : 'text-muted' }}"
-                                            ><i
                                                     class="fa fa-hand-pointer-o"
                                                     title="Clicked"
                                                     role="img"
                                                     aria-label="Clicked"
                                                 /> Clicked</div>
+                                            <div
+                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'reply' ? 'text-success' : 'text-muted' }}"
+                                            ><i
+                                                    class="fa fa-reply"
+                                                    title="Replied"
+                                                    role="img"
+                                                    aria-label="Replied"
+                                                /> Replied</div>
                                             <div
                                                 t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'bounced' ? 'text-danger' : 'text-muted' }}"
                                             ><i

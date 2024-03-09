@@ -1,6 +1,10 @@
 # Copyright 2024 Dixmit
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+import re
+
+import werkzeug.urls
+
 from odoo import api, fields, models, tools
 
 
@@ -20,10 +24,25 @@ class MailMail(models.Model):
     def _send_prepare_body(self):
         body = super()._send_prepare_body()
         if self.automation_record_activity_id:
-            tracking_url = self.automation_record_activity_id._get_mail_tracking_url()
+            body = self.env["mail.render.mixin"]._shorten_links(body, {}, blacklist=[])
+            token = self.automation_record_activity_id._get_mail_tracking_token()
+            for match in set(re.findall(tools.URL_REGEX, body)):
+                href = match[0]
+                url = match[1]
+
+                parsed = werkzeug.urls.url_parse(url, scheme="http")
+
+                if parsed.scheme.startswith("http") and parsed.path.startswith("/r/"):
+                    new_href = href.replace(
+                        url,
+                        "%s/au/%s/%s"
+                        % (url, str(self.automation_record_activity_id.id), token),
+                    )
+                    body = body.replace(href, new_href)
             body = tools.append_content_to_html(
                 body,
-                '<img src="%s"/>' % tracking_url,
+                '<img src="%s"/>'
+                % self.automation_record_activity_id._get_mail_tracking_url(),
                 plaintext=False,
             )
         return body

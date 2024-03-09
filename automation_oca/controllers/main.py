@@ -3,6 +3,8 @@
 
 import base64
 
+from werkzeug.exceptions import NotFound
+
 from odoo import http, tools
 from odoo.http import Response, request
 from odoo.tools import consteq
@@ -24,7 +26,7 @@ class AutomationOCAController(http.Controller):
         the data is correct"""
         if consteq(
             token,
-            tools.hmac(request.env(su=True), "automation_oca-mail-open", record_id),
+            tools.hmac(request.env(su=True), "automation_oca", record_id),
         ):
             request.env["automation.record.activity"].sudo().browse(
                 record_id
@@ -36,3 +38,27 @@ class AutomationOCAController(http.Controller):
         )
 
         return response
+
+    @http.route(
+        "/r/<string:code>/au/<int:record_id>/<string:token>", type="http", auth="public"
+    )
+    def automation_oca_redirect(self, code, record_id, token, **post):
+        # don't assume geoip is set, it is part of the website module
+        # which mass_mailing doesn't depend on
+        country_code = request.geoip.get("country_code")
+        automation_record_activity_id = False
+        if consteq(
+            token,
+            tools.hmac(request.env(su=True), "automation_oca", record_id),
+        ):
+            automation_record_activity_id = record_id
+        request.env["link.tracker.click"].sudo().add_click(
+            code,
+            ip=request.httprequest.remote_addr,
+            country_code=country_code,
+            automation_record_activity_id=automation_record_activity_id,
+        )
+        redirect_url = request.env["link.tracker"].get_url_from_code(code)
+        if not redirect_url:
+            raise NotFound()
+        return request.redirect(redirect_url, code=301, local=False)

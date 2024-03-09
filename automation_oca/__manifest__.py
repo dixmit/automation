@@ -10,7 +10,7 @@
     "category": "Automation",
     "author": "Dixmit,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/automation",
-    "depends": ["mail"],
+    "depends": ["mail", "link_tracker"],
     "data": [
         "security/security.xml",
         "security/ir.model.access.csv",
