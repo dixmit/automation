@@ -180,8 +180,9 @@
                                     </div>
                                     <div class="o_automation_kanban_card">
                                         <div class="o_automation_kanban_header">
-                                            <div
-                                                class="o_automation_kanban_header_icon btn-primary"
+                                            <button
+                                                class="o_automation_kanban_header_icon btn btn-primary"
+                                                type="edit"
                                             >
                                                 <span
                                                     class="fa fa-envelope"
@@ -197,7 +198,7 @@
                                                     role="img"
                                                     aria-label="Other activity"
                                                 />
-                                            </div>
+                                            </button>
                                             <div
                                                 class="o_automation_kanban_header_title"
                                             >
