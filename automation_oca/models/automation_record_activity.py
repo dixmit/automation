@@ -227,7 +227,8 @@ class AutomationRecordActivity(models.Model):
             {"mail_status": "open", "mail_opened_on": fields.Datetime.now()}
         )
         self.child_ids.filtered(
-            lambda r: r.trigger_type == "mail_open"
+            lambda r: r.trigger_type
+            in ["mail_open", "mail_not_reply", "mail_not_clicked"]
             and not r.scheduled_date
             and r.state == "scheduled"
         )._activate()

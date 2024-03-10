@@ -17,7 +17,7 @@ class MailThread(models.AbstractModel):
         bounced_msg_id = message_dict.get("bounced_msg_id")
         if bounced_msg_id:
             self.env["automation.record.activity"].search(
-                [("message_id", "=", bounced_msg_id)]
+                [("message_id", "in", bounced_msg_id)]
             )._set_mail_bounced()
         return result
 

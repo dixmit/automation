@@ -30,7 +30,7 @@ class AutomationTestCase(TransactionCase):
                 "name": "My template",
                 "model_id": cls.env.ref("base.model_res_partner").id,
                 "subject": "Subject",
-                "body_html": "My templae",
+                "body_html": 'My template <a href="https://www.twitter.com" /> with link',
             }
         )
         cls.partner_01 = cls.env["res.partner"].create(

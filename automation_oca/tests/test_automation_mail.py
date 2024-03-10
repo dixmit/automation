@@ -2,11 +2,56 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import tools
+from odoo.tests.common import HttpCase
+
+from odoo.addons.mail.tests.common import MockEmail
 
 from .common import AutomationTestCase
 
+MAIL_TEMPLATE = """Return-Path: <whatever-2a840@postmaster.twitter.com>
+To: {to}
+cc: {cc}
+Received: by mail1.openerp.com (Postfix, from userid 10002)
+    id 5DF9ABFB2A; Fri, 10 Aug 2012 16:16:39 +0200 (CEST)
+From: {email_from}
+Subject: {subject}
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+    boundary="----=_Part_4200734_24778174.1344608186754"
+Date: Fri, 10 Aug 2012 14:16:26 +0000
+Message-ID: {msg_id}
+{extra}
+------=_Part_4200734_24778174.1344608186754
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-class TestAutomationMail(AutomationTestCase):
+I would gladly answer to your mass mailing !
+
+--
+Your Dear Customer
+------=_Part_4200734_24778174.1344608186754
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+ <head>=20
+  <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8" />
+ </head>=20
+ <body style=3D"margin: 0; padding: 0; background: #ffffff;-webkit-text-size-adjust: 100%;">=20
+
+  <p>I would gladly answer to your mass mailing !</p>
+
+  <p>--<br/>
+     Your Dear Customer
+  <p>
+ </body>
+</html>
+------=_Part_4200734_24778174.1344608186754--
+"""
+
+
+class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
     def test_activity_execution(self):
         """
         We will check the execution of the tasks and that we cannot execute them again
@@ -57,3 +102,168 @@ class TestAutomationMail(AutomationTestCase):
         self.env["mail.thread"]._routing_handle_bounce(False, parsed_bounce_values)
         self.assertEqual("bounce", record_activity.mail_status)
         self.assertTrue(record_child_activity.scheduled_date)
+
+    def test_reply(self):
+        """
+        Now we will check the execution of scheduled activities"""
+        with self.mock_mail_gateway():
+            activity = self.create_mail_activity()
+            child_activity = self.create_mail_activity(
+                parent_id=activity.id, trigger_type="mail_reply"
+            )
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            self.env["automation.record.activity"]._cron_automation_activities()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            record_child_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", child_activity.id)]
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertTrue(record_child_activity)
+            self.assertFalse(record_child_activity.scheduled_date)
+            self.gateway_mail_reply_wrecord(
+                MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
+            )
+            self.assertEqual("reply", record_activity.mail_status)
+            self.assertTrue(record_child_activity.scheduled_date)
+
+    def test_no_reply(self):
+        """
+        Now we will check the not reply validation. To remember:
+        if it is not opened, the schedule date of the child task will be false
+        """
+        with self.mock_mail_gateway():
+            activity = self.create_mail_activity()
+            child_activity = self.create_mail_activity(
+                parent_id=activity.id, trigger_type="mail_not_reply"
+            )
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            self.env["automation.record.activity"]._cron_automation_activities()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            record_child_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", child_activity.id)]
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertTrue(record_child_activity)
+            self.assertFalse(record_child_activity.scheduled_date)
+            self.url_open(record_activity._get_mail_tracking_url())
+            self.assertEqual("open", record_activity.mail_status)
+            self.assertTrue(record_child_activity.scheduled_date)
+            self.gateway_mail_reply_wrecord(
+                MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
+            )
+            self.assertEqual("reply", record_activity.mail_status)
+            self.env["automation.record.activity"]._cron_automation_activities()
+            self.assertEqual("rejected", record_child_activity.state)
+
+    def test_open(self):
+        """
+        Now we will check the execution of scheduled activities"""
+        with self.mock_mail_gateway():
+            activity = self.create_mail_activity()
+            child_activity = self.create_mail_activity(
+                parent_id=activity.id, trigger_type="mail_open"
+            )
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            self.env["automation.record.activity"]._cron_automation_activities()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            record_child_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", child_activity.id)]
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertTrue(record_child_activity)
+            self.assertFalse(record_child_activity.scheduled_date)
+            self.url_open(record_activity._get_mail_tracking_url())
+            self.assertEqual("open", record_activity.mail_status)
+            self.assertTrue(record_child_activity.scheduled_date)
+
+    def test_open_wrong_code(self):
+        """
+        We wan to ensure that the code is checked on the call
+        """
+        with self.mock_mail_gateway():
+            activity = self.create_mail_activity()
+            child_activity = self.create_mail_activity(
+                parent_id=activity.id, trigger_type="mail_open"
+            )
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            self.env["automation.record.activity"]._cron_automation_activities()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            record_child_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", child_activity.id)]
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertTrue(record_child_activity)
+            self.assertFalse(record_child_activity.scheduled_date)
+            self.url_open(
+                "/automation_oca/track/%s/INVENTED_CODE/blank.gif" % record_activity.id
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertFalse(record_child_activity.scheduled_date)
+
+    def test_no_open(self):
+        """
+        Now we will check the not open validation when it is not opened (should be executed)
+        """
+        with self.mock_mail_gateway():
+            activity = self.create_mail_activity()
+            child_activity = self.create_mail_activity(
+                parent_id=activity.id, trigger_type="mail_not_open"
+            )
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            self.env["automation.record.activity"]._cron_automation_activities()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            record_child_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", child_activity.id)]
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertTrue(record_child_activity)
+            self.assertTrue(record_child_activity.scheduled_date)
+            self.env["automation.record.activity"]._cron_automation_activities()
+            self.assertEqual("done", record_child_activity.state)
+
+    def test_no_open_rejected(self):
+        """
+        Now we will check the not open validation when it was already opened
+        """
+        with self.mock_mail_gateway():
+            activity = self.create_mail_activity()
+            child_activity = self.create_mail_activity(
+                parent_id=activity.id, trigger_type="mail_not_open"
+            )
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            self.env["automation.record.activity"]._cron_automation_activities()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            record_child_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", child_activity.id)]
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertTrue(record_child_activity)
+            self.assertTrue(record_child_activity.scheduled_date)
+            self.url_open(record_activity._get_mail_tracking_url())
+            self.assertEqual("open", record_activity.mail_status)
+            self.env["automation.record.activity"]._cron_automation_activities()
+            self.assertEqual("rejected", record_child_activity.state)
