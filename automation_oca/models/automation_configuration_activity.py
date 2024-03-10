@@ -1,10 +1,14 @@
 # Copyright 2024 Dixmit
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+from collections import defaultdict
+
+import babel.dates
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
 from odoo.osv import expression
+from odoo.tools import get_lang
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -77,6 +81,83 @@ class AutomationConfigurationActivity(models.Model):
     parent_position = fields.Integer(
         compute="_compute_parent_position", recursive=True, store=True
     )
+    graph_data = fields.Json(compute="_compute_graph_data")
+    graph_done = fields.Integer(compute="_compute_total_graph_data")
+    graph_error = fields.Integer(compute="_compute_total_graph_data")
+
+    @api.depends()
+    def _compute_graph_data(self):
+        total = self.env["automation.record.activity"].read_group(
+            [
+                ("configuration_activity_id", "in", self.ids),
+                ("processed_on", ">=", fields.Date.today() + relativedelta(days=-14)),
+            ],
+            ["configuration_activity_id"],
+            ["configuration_activity_id", "processed_on:day"],
+            lazy=False,
+        )
+        done = self.env["automation.record.activity"].read_group(
+            [
+                ("configuration_activity_id", "in", self.ids),
+                ("processed_on", ">=", fields.Date.today() + relativedelta(days=-14)),
+                ("state", "=", "done"),
+            ],
+            ["configuration_activity_id"],
+            ["configuration_activity_id", "processed_on:day"],
+            lazy=False,
+        )
+        now = fields.Datetime.now()
+        date_map = {
+            babel.dates.format_datetime(
+                now + relativedelta(days=i - 14),
+                format="dd MMM yyy",
+                tzinfo=self._context.get("tz", None),
+                locale=get_lang(self.env).code,
+            ): 0
+            for i in range(0, 15)
+        }
+        result = defaultdict(
+            lambda: {"done": date_map.copy(), "error": date_map.copy()}
+        )
+        for line in total:
+            result[line["configuration_activity_id"][0]]["error"][
+                line["processed_on:day"]
+            ] += line["__count"]
+        for line in done:
+            result[line["configuration_activity_id"][0]]["done"][
+                line["processed_on:day"]
+            ] += line["__count"]
+            result[line["configuration_activity_id"][0]]["error"][
+                line["processed_on:day"]
+            ] -= line["__count"]
+        for record in self:
+            graph_info = dict(result[record.id])
+            record.graph_data = {
+                "error": [
+                    {"x": key[:-5], "y": value, "name": key}
+                    for (key, value) in graph_info["error"].items()
+                ],
+                "done": [
+                    {"x": key[:-5], "y": value, "name": key}
+                    for (key, value) in graph_info["done"].items()
+                ],
+            }
+
+    @api.depends()
+    def _compute_total_graph_data(self):
+        for record in self:
+            record.graph_done = self.env["automation.record.activity"].search_count(
+                [
+                    ("configuration_activity_id", "in", self.ids),
+                    ("state", "=", "done"),
+                ]
+            )
+            record.graph_error = self.env["automation.record.activity"].search_count(
+                [
+                    ("configuration_activity_id", "in", self.ids),
+                    ("state", "in", ["expired", "rejected", "error", "cancel"]),
+                ]
+            )
 
     @api.depends("trigger_interval", "trigger_interval_type")
     def _compute_trigger_interval_hours(self):

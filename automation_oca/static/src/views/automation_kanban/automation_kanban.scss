@@ -65,6 +65,14 @@
                         right: 0px;
                     }
                 }
+                .o_automation_kanban_graph {
+                    .o_automation_kpi_processed {
+                        color: #4caf50;
+                    }
+                    .o_automation_kpi_error {
+                        color: #f44336;
+                    }
+                }
                 .o_automation_kanban_child_add {
                     .o_automation_kanban_child_add_title {
                         padding: 2px;
@@ -106,4 +114,7 @@
             }
         }
     }
+}
+.o_field_automation_graph {
+    width: 100%;
 }

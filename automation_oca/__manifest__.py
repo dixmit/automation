@@ -24,6 +24,7 @@
     "assets": {
         "web.assets_backend": [
             "automation_oca/static/src/**/*.js",
+            "automation_oca/static/src/**/*.xml",
             "automation_oca/static/src/**/*.scss",
         ],
     },

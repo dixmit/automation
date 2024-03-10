@@ -233,8 +233,27 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="o_automation_kanban_graph">
-                                            <span>TO BE FILLED</span>
+                                        <div class="o_automation_kanban_graph row">
+                                            <div class="col-8">
+                                                <field
+                                                    name="graph_data"
+                                                    widget="automation_graph"
+                                                />
+                                            </div>
+                                            <div class="col-4 text-center pt-2">
+                                                <h2 class="o_automation_kpi_processed">
+                                                    <field name="graph_done" />
+                                                </h2>
+                                                <div
+                                                    class="o_automation_kpi_processed pb-3"
+                                                > Processed</div>
+                                                <h2 class="o_automation_kpi_error">
+                                                    <field name="graph_error" />
+                                                </h2>
+                                                <div
+                                                    class="o_automation_kpi_error"
+                                                > Error</div>
+                                            </div>
                                         </div>
 
                                         <div

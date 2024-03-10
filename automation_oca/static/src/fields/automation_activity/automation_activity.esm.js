@@ -1,7 +1,7 @@
 /** @odoo-module **/
 import {useOpenX2ManyRecord, useX2ManyCrud} from "@web/views/fields/relational_utils";
 
-import {AutomationKanbanRenderer} from "../views/automation_kanban/automation_kanban_renderer.esm";
+import {AutomationKanbanRenderer} from "../../views/automation_kanban/automation_kanban_renderer.esm";
 import {X2ManyField} from "@web/views/fields/x2many/x2many_field";
 import {registry} from "@web/core/registry";
 
