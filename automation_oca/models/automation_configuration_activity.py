@@ -148,13 +148,13 @@ class AutomationConfigurationActivity(models.Model):
         for record in self:
             record.graph_done = self.env["automation.record.activity"].search_count(
                 [
-                    ("configuration_activity_id", "in", self.ids),
+                    ("configuration_activity_id", "=", record.id),
                     ("state", "=", "done"),
                 ]
             )
             record.graph_error = self.env["automation.record.activity"].search_count(
                 [
-                    ("configuration_activity_id", "in", self.ids),
+                    ("configuration_activity_id", "=", record.id),
                     ("state", "in", ["expired", "rejected", "error", "cancel"]),
                 ]
             )
