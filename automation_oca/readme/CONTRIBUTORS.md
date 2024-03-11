@@ -1,1 +1,1 @@
-- Enric Tobella <www.dixmit.com>
+- Enric Tobella ([Dixmit](https://www.dixmit.com/))

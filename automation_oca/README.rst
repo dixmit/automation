@@ -30,6 +30,14 @@ Automation Oca
 
 This module allows to automate several process according to some rules.
 
+This is great for creating automated actions on your database like:
+
+-  Send a welcome email to all new partners (or filtered according to
+   some rules)
+-  Remember to online customers that they forgot their basket with some
+   items
+-  Send documents to sign to all new employees
+
 **Table of contents**
 
 .. contents::
@@ -61,14 +69,14 @@ Authors
 Contributors
 ------------
 
--  Enric Tobella <www.dixmit.com>
+-  Enric Tobella (`Dixmit <https://www.dixmit.com/>`__)
 
 Other credits
 -------------
 
 The development of this module has been financially supported by:
 
--  Associacion Española de Odoo (AEODOO)
+-  Associacion Española de Odoo (`AEODOO <https://www.aeodoo.org/>`__)
 
 Maintainers
 -----------
