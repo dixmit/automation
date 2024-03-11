@@ -1,6 +1,10 @@
 # Copyright 2024 Dixmit
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+from datetime import datetime
+
+from freezegun import freeze_time
+
 from odoo.exceptions import ValidationError
 
 from .common import AutomationTestCase
@@ -165,6 +169,23 @@ class TestAutomationBase(AutomationTestCase):
         self.env["automation.record.activity"]._cron_automation_activities()
         self.assertEqual("expired", record_activity.state)
 
+    def test_cancel(self):
+        """
+        Testing that cancelled actions are not executed
+        """
+        activity = self.create_server_action()
+        self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        self.assertEqual("scheduled", record_activity.state)
+        record_activity.cancel()
+        self.assertEqual("cancel", record_activity.state)
+        self.env["automation.record.activity"]._cron_automation_activities()
+        self.assertEqual("cancel", record_activity.state)
+
     def test_counter(self):
         """
         Check the counter function
@@ -242,3 +263,35 @@ class TestAutomationBase(AutomationTestCase):
         self.assertEqual(0, child_activity.graph_error)
         self.assertEqual(1, sum(d["y"] for d in child_activity.graph_data["done"]))
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["error"]))
+
+    def test_schedule_date_computation_hours(self):
+        with freeze_time("2022-01-01"):
+            activity = self.create_server_action(trigger_interval=1)
+            self.assertEqual(1, activity.trigger_interval_hours)
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            self.assertEqual("scheduled", record_activity.state)
+            self.assertEqual(
+                record_activity.scheduled_date, datetime(2022, 1, 1, 1, 0, 0, 0)
+            )
+
+    def test_schedule_date_computation_days(self):
+        with freeze_time("2022-01-01"):
+            activity = self.create_server_action(
+                trigger_interval=1, trigger_interval_type="days"
+            )
+            self.assertEqual(24, activity.trigger_interval_hours)
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            self.assertEqual("scheduled", record_activity.state)
+            self.assertEqual(
+                record_activity.scheduled_date, datetime(2022, 1, 2, 0, 0, 0, 0)
+            )
