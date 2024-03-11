@@ -243,7 +243,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
 
     def test_no_open_rejected(self):
         """
-        Now we will check the not open validation when it was already opened
+        Now we will check the not open validation when it was already opened (rejection)
         """
         with self.mock_mail_gateway():
             activity = self.create_mail_activity()
@@ -270,7 +270,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
 
     def test_click(self):
         """
-        Now we will check the execution of scheduled activities"""
+        Now we will check the execution of scheduled activities that should happen
+        after a click
+        """
         with self.mock_mail_gateway():
             activity = self.create_mail_activity()
             child_activity = self.create_mail_activity(
@@ -339,7 +341,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
 
     def test_click_wrong_url(self):
         """
-        Now we will check the execution of scheduled activities"""
+        Now we will check that no log is processed when the clicked url is malformed.
+        That happens because we add a code information on the URL.
+        """
         with self.mock_mail_gateway():
             activity = self.create_mail_activity()
             child_activity = self.create_mail_activity(
@@ -374,7 +378,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
 
     def test_no_click(self):
         """
-        Now we will check the not open validation when it is not opened (should be executed)
+        Checking the not clicked validation when it is not clicked (should be executed)
         """
         with self.mock_mail_gateway():
             activity = self.create_mail_activity()
@@ -402,7 +406,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
 
     def test_no_click_rejected(self):
         """
-        Now we will check the not open validation when it was already opened
+        Checking the not clicked validation when it was already clicked
         """
         with self.mock_mail_gateway():
             activity = self.create_mail_activity()

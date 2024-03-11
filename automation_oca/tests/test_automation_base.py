@@ -150,6 +150,21 @@ class TestAutomationBase(AutomationTestCase):
         record.model = "unexistent.model"
         self.assertFalse(record.resource_ref)
 
+    def test_expiry(self):
+        """
+        Testing that expired actions are not executed
+        """
+        activity = self.create_server_action(expiry=True, trigger_interval=1)
+        self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        self.assertEqual("scheduled", record_activity.state)
+        self.env["automation.record.activity"]._cron_automation_activities()
+        self.assertEqual("expired", record_activity.state)
+
     def test_counter(self):
         """
         Check the counter function
@@ -169,3 +184,61 @@ class TestAutomationBase(AutomationTestCase):
         self.configuration.start_automation()
         with self.assertRaises(ValidationError):
             self.configuration.start_automation()
+
+    def test_graph(self):
+        """
+        Checking the graph results.
+        We will use 2 parent actions (1 will fail) and a child action of the one ok.
+        After 2 executions, we should have (1 OK, 0 Errors) for parent and child and
+        (0 OK, 1 Error) for the failing one.
+        """
+        activity_01 = self.create_server_action()
+        activity_02 = self.create_server_action(server_action_id=self.error_action.id)
+        child_activity = self.create_server_action(parent_id=activity_01.id)
+        self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
+        self.assertEqual(0, activity_01.graph_done)
+        self.assertEqual(0, activity_01.graph_error)
+        self.assertEqual(0, sum(d["y"] for d in activity_01.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in activity_01.graph_data["error"]))
+        self.assertEqual(0, activity_02.graph_done)
+        self.assertEqual(0, activity_02.graph_error)
+        self.assertEqual(0, sum(d["y"] for d in activity_02.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in activity_02.graph_data["error"]))
+        self.assertEqual(0, child_activity.graph_done)
+        self.assertEqual(0, child_activity.graph_error)
+        self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["error"]))
+        self.env["automation.record.activity"]._cron_automation_activities()
+        activity_01.invalidate_recordset()
+        self.assertEqual(1, activity_01.graph_done)
+        self.assertEqual(0, activity_01.graph_error)
+        self.assertEqual(1, sum(d["y"] for d in activity_01.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in activity_01.graph_data["error"]))
+        activity_02.invalidate_recordset()
+        self.assertEqual(0, activity_02.graph_done)
+        self.assertEqual(1, activity_02.graph_error)
+        self.assertEqual(0, sum(d["y"] for d in activity_02.graph_data["done"]))
+        self.assertEqual(1, sum(d["y"] for d in activity_02.graph_data["error"]))
+        child_activity.invalidate_recordset()
+        self.assertEqual(0, child_activity.graph_done)
+        self.assertEqual(0, child_activity.graph_error)
+        self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["error"]))
+        self.env["automation.record.activity"]._cron_automation_activities()
+        activity_01.invalidate_recordset()
+        self.assertEqual(1, activity_01.graph_done)
+        self.assertEqual(0, activity_01.graph_error)
+        self.assertEqual(1, sum(d["y"] for d in activity_01.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in activity_01.graph_data["error"]))
+        activity_02.invalidate_recordset()
+        self.assertEqual(0, activity_02.graph_done)
+        self.assertEqual(1, activity_02.graph_error)
+        self.assertEqual(0, sum(d["y"] for d in activity_02.graph_data["done"]))
+        self.assertEqual(1, sum(d["y"] for d in activity_02.graph_data["error"]))
+        child_activity.invalidate_recordset()
+        self.assertEqual(1, child_activity.graph_done)
+        self.assertEqual(0, child_activity.graph_error)
+        self.assertEqual(1, sum(d["y"] for d in child_activity.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["error"]))
