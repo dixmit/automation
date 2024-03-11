@@ -267,3 +267,39 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             self.assertEqual("open", record_activity.mail_status)
             self.env["automation.record.activity"]._cron_automation_activities()
             self.assertEqual("rejected", record_child_activity.state)
+
+    def test_click(self):
+        """
+        Now we will check the execution of scheduled activities"""
+        with self.mock_mail_gateway():
+            activity = self.create_mail_activity()
+            child_activity = self.create_mail_activity(
+                parent_id=activity.id, trigger_type="mail_click"
+            )
+            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.start_automation()
+            self.env["automation.configuration"].cron_automation()
+            self.env["automation.record.activity"]._cron_automation_activities()
+            record_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", activity.id)]
+            )
+            record_child_activity = self.env["automation.record.activity"].search(
+                [("configuration_activity_id", "=", child_activity.id)]
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertTrue(record_child_activity)
+            self.assertFalse(record_child_activity.scheduled_date)
+            tracker = self.env["link.tracker"].search(
+                [("url", "=", "https://www.twitter.com")]
+            )
+            self.assertTrue(tracker)
+            self.url_open(
+                "/r/%s/au/%s/%s"
+                % (
+                    tracker.code,
+                    record_activity.id,
+                    record_activity._get_mail_tracking_token(),
+                )
+            )
+            self.assertEqual("open", record_activity.mail_status)
+            self.assertTrue(record_child_activity.scheduled_date)
