@@ -206,6 +206,26 @@ class TestAutomationBase(AutomationTestCase):
         with self.assertRaises(ValidationError):
             self.configuration.start_automation()
 
+    def test_state_automation_management(self):
+        """
+        Testing the change of state
+        Draft -> Run -> Stop -> Draft
+        """
+        self.configuration.start_automation()
+        self.assertEqual(self.configuration.state, "run")
+        self.configuration.stop_automation()
+        self.assertEqual(self.configuration.state, "stop")
+        self.env["automation.configuration"].cron_automation()
+        self.assertFalse(
+            self.env["automation.record"].search(
+                [
+                    ("configuration_id", "=", self.configuration.id),
+                ]
+            )
+        )
+        self.configuration.back_to_draft()
+        self.assertEqual(self.configuration.state, "draft")
+
     def test_graph(self):
         """
         Checking the graph results.

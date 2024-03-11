@@ -17,6 +17,20 @@
                     />
                     <button
                         type="object"
+                        name="stop_automation"
+                        class="btn-secondary"
+                        string="Stop"
+                        attrs="{'invisible': [('state', '!=', 'run')]}"
+                    />
+                    <button
+                        type="object"
+                        name="back_to_draft"
+                        class="btn-secondary"
+                        string="Back to draft"
+                        attrs="{'invisible': [('state', '!=', 'stop')]}"
+                    />
+                    <button
+                        type="object"
                         name="run_automation"
                         class="btn-primary"
                         string="Run"

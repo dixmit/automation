@@ -61,6 +61,14 @@ class AutomationConfiguration(models.Model):
             raise ValidationError(_("State must be in draft in order to start"))
         self.state = "run"
 
+    def stop_automation(self):
+        self.ensure_one()
+        self.state = "stop"
+
+    def back_to_draft(self):
+        self.ensure_one()
+        self.state = "draft"
+
     def cron_automation(self):
         for record in self.search([("state", "=", "run")]):
             record.run_automation()
