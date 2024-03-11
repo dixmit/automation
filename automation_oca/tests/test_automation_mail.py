@@ -375,6 +375,18 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             )
             self.assertEqual("sent", record_activity.mail_status)
             self.assertFalse(record_child_activity.scheduled_date)
+            # Now we check the case where the code is not found
+            tracker.unlink()
+            self.url_open(
+                "/r/%s/au/%s/%s"
+                % (
+                    tracker.code,
+                    record_activity.id,
+                    record_activity._get_mail_tracking_token(),
+                )
+            )
+            self.assertEqual("sent", record_activity.mail_status)
+            self.assertFalse(record_child_activity.scheduled_date)
 
     def test_no_click(self):
         """
