@@ -10,6 +10,9 @@ class AutomationRecord(models.Model):
     _description = "Automation Record"
 
     name = fields.Char(compute="_compute_name")
+    state = fields.Selection(
+        [("run", "Running"), ("done", "Done")], compute="_compute_state", store=True
+    )
     configuration_id = fields.Many2one(
         "automation.configuration", required=True, readonly=True
     )
@@ -39,6 +42,17 @@ class AutomationRecord(models.Model):
             .sudo()
             .search([("is_mail_thread", "=", True)])
         ]
+
+    @api.depends("automation_activity_ids.state")
+    def _compute_state(self):
+        for record in self:
+            record.state = (
+                "run"
+                if record.automation_activity_ids.filtered(
+                    lambda r: r.state == "scheduled"
+                )
+                else "done"
+            )
 
     @api.depends("model", "res_id")
     def _compute_resource_ref(self):

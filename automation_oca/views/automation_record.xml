@@ -8,7 +8,7 @@
         <field name="arch" type="xml">
             <form create="0">
                 <header>
-                    <!-- TODO -->
+                    <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
                     <!-- TODO -->
@@ -136,7 +136,7 @@
                                                     class="text-primary"
                                                 >
                                                     <i
-                                                        class="fa fa-hand-pointer"
+                                                        class="fa fa-hand-pointer-o"
                                                     /> Not clicked yet
                                                 </span>
                                             </strong>
@@ -266,10 +266,21 @@
         </field>
     </record>
 
+
+    <record id="automation_record_graph_view" model="ir.ui.view">
+        <field name="name">automation.record.graph</field>
+        <field name="model">automation.record</field>
+        <field name="arch" type="xml">
+            <graph string="Records">
+                <field name="create_date" type="row" />
+            </graph>
+        </field>
+    </record>
+
     <record model="ir.actions.act_window" id="automation_record_act_window">
         <field name="name">Automation Record</field> <!-- TODO -->
         <field name="res_model">automation.record</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">graph,tree,form</field>
         <field name="domain">[]</field>
         <field name="context">{}</field>
     </record>
@@ -278,7 +289,7 @@
         model="ir.actions.act_window"
         id="automation_record_configuration_act_window"
     >
-        <field name="name">Automation Record</field>
+        <field name="name">Records</field>
         <field name="res_model">automation.record</field>
         <field name="view_mode">tree,form</field>
         <field name="domain">[('configuration_id', '=', active_id)]</field>
@@ -286,10 +297,10 @@
     </record>
 
     <record model="ir.ui.menu" id="automation_record_menu">
-        <field name="name">Automation Record</field>
-        <field name="parent_id" ref="automation_root_menu" />
+        <field name="name">Records</field>
+        <field name="parent_id" ref="automation_reporting_root_menu" />
         <field name="action" ref="automation_record_act_window" />
-        <field name="sequence" eval="16" /> <!-- TODO -->
+        <field name="sequence" eval="16" />
     </record>
 
 </odoo>

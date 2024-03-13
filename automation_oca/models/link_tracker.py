@@ -8,6 +8,12 @@ class LinkTrackerClick(models.Model):
     _inherit = "link.tracker.click"
 
     automation_record_activity_id = fields.Many2one("automation.record.activity")
+    automation_configuration_activity_id = fields.Many2one(
+        related="automation_record_activity_id.configuration_activity_id", store=True
+    )
+    automation_configuration_id = fields.Many2one(
+        related="automation_record_activity_id.configuration_id", store=True
+    )
 
     @api.model
     def add_click(self, code, automation_record_activity_id=False, **route_values):

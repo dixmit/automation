@@ -21,7 +21,13 @@ class AutomationRecordActivity(models.Model):
     configuration_activity_id = fields.Many2one(
         "automation.configuration.activity", required=True
     )
-    activity_type = fields.Selection(related="configuration_activity_id.activity_type")
+    configuration_id = fields.Many2one(
+        related="configuration_activity_id.configuration_id",
+        store=True,
+    )
+    activity_type = fields.Selection(
+        related="configuration_activity_id.activity_type", store=True
+    )
     scheduled_date = fields.Datetime(readonly=True)
     expiry_date = fields.Datetime(readonly=True)
     processed_on = fields.Datetime(readonly=True)

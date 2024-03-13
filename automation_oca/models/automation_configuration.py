@@ -1,6 +1,8 @@
 # Copyright 2024 Dixmit
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+from collections import defaultdict
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.tools.query import _generate_table_alias
@@ -35,6 +37,7 @@ class AutomationConfiguration(models.Model):
         [("draft", "Draft"), ("run", "Running"), ("stop", "Stopped")],
         default="draft",
         required=True,
+        group_expand="_group_expand_states",
     )
     automation_activity_ids = fields.One2many(
         "automation.configuration.activity", inverse_name="configuration_id"
@@ -45,15 +48,54 @@ class AutomationConfiguration(models.Model):
         domain=[("parent_id", "=", False)],
     )
     record_count = fields.Integer(compute="_compute_record_count")
+    record_done_count = fields.Integer(compute="_compute_record_count")
+    record_run_count = fields.Integer(compute="_compute_record_count")
+    activity_mail_count = fields.Integer(compute="_compute_activity_count")
+    activity_action_count = fields.Integer(compute="_compute_activity_count")
+    click_count = fields.Integer(compute="_compute_click_count")
+
+    @api.depends()
+    def _compute_click_count(self):
+        data = self.env["link.tracker.click"].read_group(
+            [("automation_configuration_id", "in", self.ids)],
+            [],
+            ["automation_configuration_id"],
+            lazy=False,
+        )
+        mapped_data = {d["automation_configuration_id"][0]: d["__count"] for d in data}
+        for record in self:
+            record.click_count = mapped_data.get(record.id, 0)
+
+    @api.depends()
+    def _compute_activity_count(self):
+        data = self.env["automation.record.activity"].read_group(
+            [("configuration_id", "in", self.ids), ("state", "=", "done")],
+            [],
+            ["configuration_id", "activity_type"],
+            lazy=False,
+        )
+        mapped_data = defaultdict(lambda: {})
+        for d in data:
+            mapped_data[d["configuration_id"][0]][d["activity_type"]] = d["__count"]
+        for record in self:
+            record.activity_mail_count = mapped_data[record.id].get("mail", 0)
+            record.activity_action_count = mapped_data[record.id].get("action", 0)
 
     @api.depends()
     def _compute_record_count(self):
         data = self.env["automation.record"].read_group(
-            [("configuration_id", "in", self.ids)], [], ["configuration_id"], lazy=False
+            [("configuration_id", "in", self.ids)],
+            [],
+            ["configuration_id", "state"],
+            lazy=False,
         )
-        mapped_data = {d["configuration_id"][0]: d["__count"] for d in data}
+        mapped_data = defaultdict(lambda: {})
+        for d in data:
+            mapped_data[d["configuration_id"][0]][d["state"]] = d["__count"]
         for record in self:
-            record.record_count = mapped_data.get(record.id, 0)
+            record.record_done_count = mapped_data[record.id].get("done", 0)
+            record.record_run_count = mapped_data[record.id].get("run", 0)
+            record.record_count = sum(mapped_data[record.id].values())
 
     def start_automation(self):
         self.ensure_one()
@@ -113,3 +155,6 @@ class AutomationConfiguration(models.Model):
                 for activity in self.automation_direct_activity_ids
             ],
         }
+
+    def _group_expand_states(self, states, domain, order):
+        return [key for key, _val in self._fields["state"].selection]

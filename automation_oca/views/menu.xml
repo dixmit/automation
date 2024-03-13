@@ -6,9 +6,9 @@
         <field name="groups_id" eval="[(4, ref('group_automation_user'))]" />
         <field name="sequence" eval="55" />
     </record>
-    <record model="ir.ui.menu" id="automation_configuration_root_menu">
-        <field name="name">Configuration</field>
+    <record model="ir.ui.menu" id="automation_reporting_root_menu">
+        <field name="name">Reporting</field>
         <field name="parent_id" ref="automation_root_menu" />
-        <field name="sequence" eval="90" />
+        <field name="sequence" eval="40" />
     </record>
 </odoo>

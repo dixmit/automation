@@ -400,10 +400,73 @@
         <field name="model">automation.configuration</field>
         <field name="arch" type="xml">
             <search>
-                <!-- TODO -->
+                <field name="name" />
+                <separator />
+                <filter name="draft" string="Draft" domain="[('state','=', 'draft')]" />
+                <filter name="run" string="Run" domain="[('state','=', 'run')]" />
+                <filter name="stop" string="Stopped" domain="[('state','=', 'stop')]" />
+                <separator />
+                <filter
+                    name="archived"
+                    string="Archived"
+                    domain="[('active','=', False)]"
+                />
             </search>
         </field>
     </record>
+
+    <record model="ir.ui.view" id="automation_configuration_kanban_view">
+        <field name="model">automation.configuration</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" quick_create="false">
+                <field name="state" readonly="1" />
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="row">
+                                <field name="name" class="o_text_overflow" />
+                            </div>
+                            <div class="row mt8">
+                                <div class="col-4 text-center text-muted">
+                                    <div>Records</div>
+                                    <field name="record_count" class="h1" />
+                                </div>
+                                <div class="col-4 text-center text-primary">
+                                    <div>Running</div>
+                                    <field name="record_run_count" class="h1" />
+                                </div>
+                                <div class="col-4 text-center text-muted">
+                                    <div>Done</div>
+                                    <field name="record_done_count" class="h1" />
+                                </div>
+                            </div>
+                            <div class="row mt8">
+                                <div class="col-4 text-center text-muted">
+                                    <div><i
+                                            class="fa fa-envelope"
+                                            title="Mails"
+                                        /></div>
+                                    <field name="activity_mail_count" class="h2" />
+                                </div>
+                                <div class="col-4 text-center text-activity_mail_count">
+                                    <div><i class="fa fa-cogs" title="Actions" /></div>
+                                    <field name="activity_action_count" class="h2" />
+                                </div>
+                                <div class="col-4 text-center text-muted">
+                                    <div><i
+                                            class="fa fa-hand-pointer-o"
+                                            title="Clicks"
+                                        /></div>
+                                    <field name="click_count" class="h2" />
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
 
     <record model="ir.ui.view" id="automation_configuration_tree_view">
         <field name="model">automation.configuration</field>
@@ -418,14 +481,14 @@
     <record model="ir.actions.act_window" id="automation_configuration_act_window">
         <field name="name">Automation Configuration</field> <!-- TODO -->
         <field name="res_model">automation.configuration</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">kanban,tree,form</field>
         <field name="domain">[]</field>
         <field name="context">{}</field>
     </record>
 
     <record model="ir.ui.menu" id="automation_configuration_menu">
         <field name="name">Automation Configuration</field>
-        <field name="parent_id" ref="automation_configuration_root_menu" />
+        <field name="parent_id" ref="automation_root_menu" />
         <field name="action" ref="automation_configuration_act_window" />
         <field name="sequence" eval="10" />
     </record>
