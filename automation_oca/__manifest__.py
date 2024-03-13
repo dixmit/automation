@@ -19,6 +19,7 @@
         "views/automation_record_activity.xml",
         "views/automation_configuration_activity.xml",
         "views/automation_configuration.xml",
+        "views/link_tracker_clicks.xml",
         "data/cron.xml",
     ],
     "assets": {
