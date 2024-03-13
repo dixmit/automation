@@ -85,6 +85,11 @@ class AutomationConfigurationActivity(models.Model):
     graph_done = fields.Integer(compute="_compute_total_graph_data")
     graph_error = fields.Integer(compute="_compute_total_graph_data")
 
+    @api.onchange("trigger_type")
+    def _onchange_trigger_type(self):
+        if self.trigger_type == "start":
+            self.parent_id = False
+
     @api.depends()
     def _compute_graph_data(self):
         total = self.env["automation.record.activity"].read_group(
@@ -169,7 +174,7 @@ class AutomationConfigurationActivity(models.Model):
             return self.trigger_interval * 24
         return self.trigger_interval
 
-    @api.depends("parent_id", "parent_id.parent_position")
+    @api.depends("parent_id", "parent_id.parent_position", "trigger_type")
     def _compute_parent_position(self):
         for record in self:
             record.parent_position = (

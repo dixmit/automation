@@ -33,10 +33,12 @@ export class AutomationActivity extends X2ManyField {
             const activeElement = document.activeElement;
             openRecord({
                 ...params,
-                onClose: () => {
+                onClose: async () => {
                     if (activeElement) {
                         activeElement.focus();
                     }
+                    await this.props.record.save();
+                    this.props.record.model.notify();
                 },
             });
         };

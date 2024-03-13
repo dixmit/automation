@@ -49,23 +49,23 @@ Usage
 Configure your processes
 ------------------------
 
-1. Access ``Automation`` menú
-2. Create a new Configuration
-3. Set the model and filters
-4. Create the different activities
+1. Access the ``Automation`` menu.
+2. Create a new Configuration.
+3. Set the model and filters.
+4. Create the different activities.
 5. Press ``Start``. Now, every 6 hours, a process will check if new
    records need to be created.
-6. Inside the process you can check all the created items
+6. Inside the process, you can check all the created items.
 
-|alt text|
+|Configuration Screenshot|
 
 Configuration of activities
 ---------------------------
 
 All the activities need to specify the moment of execution. We will set
-the number of hours / days and a trigger type:
+the number of hours/days and a trigger type:
 
--  ``Start of workflow``: It will be executes at the
+-  ``Start of workflow``: It will be executed at the
    previously-configured time after we create the record.
 -  ``Execution of another activity``: It will be executed at the
    previously-configured time after the previous activity is finished
@@ -90,7 +90,7 @@ the number of hours / days and a trigger type:
    time after the mail from the previous activity is bounced back for
    any reason.
 
-.. |alt text| image:: https://raw.githubusercontent.com/OCA/automation/16.0/automation_oca/static/description/configuration.png
+.. |Configuration Screenshot| image:: https://raw.githubusercontent.com/OCA/automation/16.0/automation_oca/static/description/configuration.png
 
 Bug Tracker
 ===========
