@@ -251,6 +251,12 @@
         <field name="arch" type="xml">
             <search>
                 <field name="configuration_id" />
+                <separator />
+                <filter
+                    name="filter_create_date"
+                    string="Created on"
+                    date="create_date"
+                />
             </search>
         </field>
     </record>
@@ -272,15 +278,26 @@
         <field name="model">automation.record</field>
         <field name="arch" type="xml">
             <graph string="Records">
-                <field name="create_date" type="row" />
+                <field name="create_date" interval="day" />
             </graph>
+        </field>
+    </record>
+
+    <record id="automation_record_pivot_view" model="ir.ui.view">
+        <field name="name">automation.record.pivot</field>
+        <field name="model">automation.record</field>
+        <field name="arch" type="xml">
+            <pivot string="Records">
+                <field name="configuration_id" type="row" />
+                <field name="state" type="col" />
+            </pivot>
         </field>
     </record>
 
     <record model="ir.actions.act_window" id="automation_record_act_window">
         <field name="name">Automation Record</field> <!-- TODO -->
         <field name="res_model">automation.record</field>
-        <field name="view_mode">graph,tree,form</field>
+        <field name="view_mode">graph,pivot,tree,form</field>
         <field name="domain">[]</field>
         <field name="context">{}</field>
     </record>

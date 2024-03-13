@@ -427,7 +427,7 @@
                                 <field name="name" class="o_text_overflow" />
                             </div>
                             <div class="row mt8">
-                                <div class="col-4 text-center text-muted">
+                                <div class="col-4 text-center text-black-50">
                                     <div>Records</div>
                                     <field name="record_count" class="h1" />
                                 </div>
@@ -435,24 +435,24 @@
                                     <div>Running</div>
                                     <field name="record_run_count" class="h1" />
                                 </div>
-                                <div class="col-4 text-center text-muted">
+                                <div class="col-4 text-center text-black-50">
                                     <div>Done</div>
                                     <field name="record_done_count" class="h1" />
                                 </div>
                             </div>
                             <div class="row mt8">
-                                <div class="col-4 text-center text-muted">
+                                <div class="col-4 text-center text-black-50">
                                     <div><i
                                             class="fa fa-envelope"
                                             title="Mails"
                                         /></div>
                                     <field name="activity_mail_count" class="h2" />
                                 </div>
-                                <div class="col-4 text-center text-activity_mail_count">
+                                <div class="col-4 text-center text-black-50">
                                     <div><i class="fa fa-cogs" title="Actions" /></div>
                                     <field name="activity_action_count" class="h2" />
                                 </div>
-                                <div class="col-4 text-center text-muted">
+                                <div class="col-4 text-center text-black-50">
                                     <div><i
                                             class="fa fa-hand-pointer-o"
                                             title="Clicks"
