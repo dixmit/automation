@@ -283,6 +283,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
                 [("url", "=", "https://www.twitter.com")]
             ).unlink()
             self.configuration.start_automation()
+            self.assertEqual(0, self.configuration.click_count)
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
             record_activity = self.env["automation.record.activity"].search(
@@ -292,10 +293,14 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
                 [("configuration_activity_id", "=", child_activity.id)]
             )
             self.assertEqual("sent", record_activity.mail_status)
+            self.configuration.invalidate_recordset()
+            self.assertEqual(0, self.configuration.click_count)
             self.assertTrue(record_child_activity)
             self.assertFalse(record_child_activity.scheduled_date)
             self.url_open(record_activity._get_mail_tracking_url())
             self.assertEqual("open", record_activity.mail_status)
+            self.configuration.invalidate_recordset()
+            self.assertEqual(0, self.configuration.click_count)
             self.assertFalse(record_child_activity.scheduled_date)
             tracker = self.env["link.tracker"].search(
                 [("url", "=", "https://www.twitter.com")]
@@ -320,6 +325,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
                 ),
             )
             self.assertTrue(record_child_activity.scheduled_date)
+
+            self.configuration.invalidate_recordset()
+            self.assertEqual(1, self.configuration.click_count)
             # Now we will check that a second click does not generate a second log
             self.url_open(
                 "/r/%s/au/%s/%s"
@@ -338,6 +346,8 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
                     ]
                 ),
             )
+            self.configuration.invalidate_recordset()
+            self.assertEqual(1, self.configuration.click_count)
 
     def test_click_wrong_url(self):
         """

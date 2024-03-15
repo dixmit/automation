@@ -6,6 +6,7 @@ from datetime import datetime
 from freezegun import freeze_time
 
 from odoo.exceptions import ValidationError
+from odoo.tests import Form
 
 from .common import AutomationTestCase
 
@@ -235,10 +236,13 @@ class TestAutomationBase(AutomationTestCase):
         """
         activity_01 = self.create_server_action()
         activity_02 = self.create_server_action(server_action_id=self.error_action.id)
+        activity_03 = self.create_mail_activity()
         child_activity = self.create_server_action(parent_id=activity_01.id)
         self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
+        self.assertEqual(0, self.configuration.activity_mail_count)
+        self.assertEqual(0, self.configuration.activity_action_count)
         self.assertEqual(0, activity_01.graph_done)
         self.assertEqual(0, activity_01.graph_error)
         self.assertEqual(0, sum(d["y"] for d in activity_01.graph_data["done"]))
@@ -247,11 +251,18 @@ class TestAutomationBase(AutomationTestCase):
         self.assertEqual(0, activity_02.graph_error)
         self.assertEqual(0, sum(d["y"] for d in activity_02.graph_data["done"]))
         self.assertEqual(0, sum(d["y"] for d in activity_02.graph_data["error"]))
+        self.assertEqual(0, activity_03.graph_done)
+        self.assertEqual(0, activity_03.graph_error)
+        self.assertEqual(0, sum(d["y"] for d in activity_03.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in activity_03.graph_data["error"]))
         self.assertEqual(0, child_activity.graph_done)
         self.assertEqual(0, child_activity.graph_error)
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["done"]))
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["error"]))
         self.env["automation.record.activity"]._cron_automation_activities()
+        self.configuration.invalidate_recordset()
+        self.assertEqual(1, self.configuration.activity_mail_count)
+        self.assertEqual(1, self.configuration.activity_action_count)
         activity_01.invalidate_recordset()
         self.assertEqual(1, activity_01.graph_done)
         self.assertEqual(0, activity_01.graph_error)
@@ -262,12 +273,20 @@ class TestAutomationBase(AutomationTestCase):
         self.assertEqual(1, activity_02.graph_error)
         self.assertEqual(0, sum(d["y"] for d in activity_02.graph_data["done"]))
         self.assertEqual(1, sum(d["y"] for d in activity_02.graph_data["error"]))
+        activity_03.invalidate_recordset()
+        self.assertEqual(1, activity_03.graph_done)
+        self.assertEqual(0, activity_03.graph_error)
+        self.assertEqual(1, sum(d["y"] for d in activity_03.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in activity_03.graph_data["error"]))
         child_activity.invalidate_recordset()
         self.assertEqual(0, child_activity.graph_done)
         self.assertEqual(0, child_activity.graph_error)
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["done"]))
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["error"]))
         self.env["automation.record.activity"]._cron_automation_activities()
+        self.configuration.invalidate_recordset()
+        self.assertEqual(1, self.configuration.activity_mail_count)
+        self.assertEqual(2, self.configuration.activity_action_count)
         activity_01.invalidate_recordset()
         self.assertEqual(1, activity_01.graph_done)
         self.assertEqual(0, activity_01.graph_error)
@@ -278,6 +297,11 @@ class TestAutomationBase(AutomationTestCase):
         self.assertEqual(1, activity_02.graph_error)
         self.assertEqual(0, sum(d["y"] for d in activity_02.graph_data["done"]))
         self.assertEqual(1, sum(d["y"] for d in activity_02.graph_data["error"]))
+        activity_03.invalidate_recordset()
+        self.assertEqual(1, activity_03.graph_done)
+        self.assertEqual(0, activity_03.graph_error)
+        self.assertEqual(1, sum(d["y"] for d in activity_03.graph_data["done"]))
+        self.assertEqual(0, sum(d["y"] for d in activity_03.graph_data["error"]))
         child_activity.invalidate_recordset()
         self.assertEqual(1, child_activity.graph_done)
         self.assertEqual(0, child_activity.graph_error)
@@ -315,3 +339,12 @@ class TestAutomationBase(AutomationTestCase):
             self.assertEqual(
                 record_activity.scheduled_date, datetime(2022, 1, 2, 0, 0, 0, 0)
             )
+
+    def test_onchange_activity_trigger_type(self):
+        activity = self.create_server_action()
+        child_activity = self.create_server_action(parent_id=activity.id)
+        self.assertEqual(child_activity.trigger_type, "activity")
+        self.assertTrue(child_activity.parent_id)
+        with Form(child_activity) as f:
+            f.trigger_type = "start"
+            self.assertFalse(f.parent_id)
