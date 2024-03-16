@@ -348,3 +348,44 @@ class TestAutomationBase(AutomationTestCase):
         with Form(child_activity) as f:
             f.trigger_type = "start"
             self.assertFalse(f.parent_id)
+
+    def test_field_not_field_unicity(self):
+        self.configuration.domain = (
+            "[('id', 'in', %s)]" % (self.partner_01 | self.partner_02).ids
+        )
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
+        self.assertEqual(
+            2,
+            len(
+                self.env["automation.record"].search(
+                    [("configuration_id", "=", self.configuration.id)]
+                )
+            ),
+        )
+
+    def test_field_field_unicity(self):
+        self.configuration.domain = (
+            "[('id', 'in', %s)]" % (self.partner_01 | self.partner_02).ids
+        )
+        self.configuration.field_id = self.env.ref("base.field_res_partner__email")
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
+        self.assertEqual(
+            1,
+            len(
+                self.env["automation.record"].search(
+                    [("configuration_id", "=", self.configuration.id)]
+                )
+            ),
+        )
+        self.partner_01.email = "t" + self.partner_01.email
+        self.env["automation.configuration"].cron_automation()
+        self.assertEqual(
+            2,
+            len(
+                self.env["automation.record"].search(
+                    [("configuration_id", "=", self.configuration.id)]
+                )
+            ),
+        )

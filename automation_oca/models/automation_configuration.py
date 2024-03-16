@@ -5,7 +5,6 @@ from collections import defaultdict
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
-from odoo.tools.query import _generate_table_alias
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -122,7 +121,7 @@ class AutomationConfiguration(models.Model):
         domain = safe_eval(self.domain)
         Record = self.env[self.model_id.model]
         query = Record._where_calc(domain)
-        query.left_join(
+        alias = query.left_join(
             query._tables[Record._table],
             "id",
             "automation_record",
@@ -131,12 +130,37 @@ class AutomationConfiguration(models.Model):
             "{rhs}.model = %s AND {rhs}.configuration_id = %s",
             (Record._name, self.id),
         )
-        query.add_where(
-            "{}.id is NULL".format(
-                _generate_table_alias(query._tables[Record._table], "automation_record")
+        query.add_where("{}.id is NULL".format(alias))
+        if self.field_id:
+            linked_tab = query.left_join(
+                query._tables[Record._table],
+                self.field_id.name,
+                Record._table,
+                self.field_id.name,
+                "linked",
             )
-        )
-        query_str, params = query.select()
+            alias2 = query.left_join(
+                linked_tab,
+                "id",
+                "automation_record",
+                "res_id",
+                "automation_record_linked",
+                "{rhs}.model = %s AND {rhs}.configuration_id = %s",
+                (Record._name, self.id),
+            )
+            query.add_where("{}.id is NULL".format(alias2))
+            from_clause, where_clause, params = query.get_sql()
+            query_str = "SELECT {} FROM {} WHERE {}{}{}{} GROUP BY {}".format(
+                ", ".join([f'MIN("{next(iter(query._tables))}".id) as id']),
+                from_clause,
+                where_clause or "TRUE",
+                (" ORDER BY %s" % self.order) if query.order else "",
+                (" LIMIT %d" % self.limit) if query.limit else "",
+                (" OFFSET %d" % self.offset) if query.offset else "",
+                "%s.%s" % (query._tables[Record._table], self.field_id.name),
+            )
+        else:
+            query_str, params = query.select()
         self.env.cr.execute(query_str, params)
         records = Record.browse([r[0] for r in self.env.cr.fetchall()])
         for record in records:
