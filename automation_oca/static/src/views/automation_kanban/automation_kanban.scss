@@ -7,6 +7,9 @@
         }
         .o_automation_kanban_box {
             display: flex;
+            .o_automation_kanban_card {
+                max-width: 600px;
+            }
             .o_automation_kanban_extra {
                 flex-direction: column;
                 width: 10rem;
