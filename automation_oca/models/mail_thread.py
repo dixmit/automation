@@ -40,3 +40,31 @@ class MailThread(models.AbstractModel):
         return super(MailThread, self)._message_route_process(
             message, message_dict, routes
         )
+
+    @api.model
+    def get_automation_access(self, doc_ids, operation, model_name=False):
+        """Retrieve access policy.
+
+        The behavior is similar to `mail.thread` and `mail.message`
+        and it relies on the access rules defines on the related record.
+        The behavior can be customized on the related model
+        by defining `_automation_record_access`.
+
+        By default `write`, otherwise the custom permission is returned.
+        """
+        DocModel = self.env[model_name] if model_name else self
+        create_allow = getattr(DocModel, "_automation_record_access", "write")
+        if operation in ["write", "unlink"]:
+            check_operation = "write"
+        elif operation == "create" and create_allow in [
+            "create",
+            "read",
+            "write",
+            "unlink",
+        ]:
+            check_operation = create_allow
+        elif operation == "create":
+            check_operation = "write"
+        else:
+            check_operation = operation
+        return check_operation
