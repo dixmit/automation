@@ -78,9 +78,35 @@
                             string="Unicity based on"
                             options="{'no_create_edit': True, 'no_open': True}"
                         />
+                        <label for="filter_id" string="Filter" />
+                        <div class="container ps-0">
+                            <div class="row">
+                                <div class="col-5">
+                                    <field name="filter_id" domain="filter_domain" />
+                                </div>
+                                <button
+                                    name="save_filter"
+                                    type="object"
+                                    string="Save filter"
+                                    icon="fa-save"
+                                    class="text-primary filter-left col-7"
+                                    attrs="{'invisible': [('filter_id', '!=', False)]}"
+                                />
+                            </div>
+                        </div>
+                        <field name="filter_domain" invisible="1" />
                         <field
                             name="domain"
+                            string="Domain"
                             widget="domain"
+                            attrs="{'invisible': [('filter_id', '=', False)]}"
+                            options="{'foldable': True, 'model': 'model'}"
+                        />
+                        <field
+                            name="editable_domain"
+                            string="Domain"
+                            widget="domain"
+                            attrs="{'invisible': [('filter_id', '!=', False)]}"
                             options="{'foldable': True, 'model': 'model'}"
                         />
                         <field name="company_id" groups="base.group_multi_company" />

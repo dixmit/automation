@@ -10,7 +10,7 @@ class TestAutomationAction(AutomationTestCase):
         We will check the execution of the tasks and that we cannot execute them again
         """
         activity = self.create_server_action()
-        self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         self.assertTrue(self.partner_01.comment)
@@ -39,7 +39,7 @@ class TestAutomationAction(AutomationTestCase):
         In this case, the task 1_1_1 will only be generated for partner 1 and task 1_2_1
         for partner 2
         """
-        self.configuration.domain = "[('id', 'in', [%s, %s])]" % (
+        self.configuration.editable_domain = "[('id', 'in', [%s, %s])]" % (
             self.partner_01.id,
             self.partner_02.id,
         )

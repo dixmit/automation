@@ -57,7 +57,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         We will check the execution of the tasks and that we cannot execute them again
         """
         activity = self.create_mail_activity()
-        self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         messages_01 = self.partner_01.message_ids
@@ -77,7 +77,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         child_activity = self.create_mail_activity(
             parent_id=activity.id, trigger_type="mail_bounce"
         )
-        self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         self.env["automation.record.activity"]._cron_automation_activities()
@@ -111,7 +111,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_reply"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
@@ -140,7 +142,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_not_reply"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
@@ -171,7 +175,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_open"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
@@ -197,7 +203,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_open"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
@@ -225,7 +233,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_not_open"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
@@ -250,7 +260,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_not_open"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
@@ -278,7 +290,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_click"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.env["link.tracker"].search(
                 [("url", "=", "https://www.twitter.com")]
             ).unlink()
@@ -359,7 +373,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_click"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
@@ -407,7 +423,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_not_clicked"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
@@ -435,7 +453,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             child_activity = self.create_mail_activity(
                 parent_id=activity.id, trigger_type="mail_not_clicked"
             )
-            self.configuration.domain = "[('id', '=', %s)]" % self.partner_01.id
+            self.configuration.editable_domain = (
+                "[('id', '=', %s)]" % self.partner_01.id
+            )
             self.configuration.start_automation()
             self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()

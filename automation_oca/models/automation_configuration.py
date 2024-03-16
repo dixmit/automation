@@ -17,7 +17,10 @@ class AutomationConfiguration(models.Model):
     name = fields.Char(required=True)
     active = fields.Boolean(default=True)
     company_id = fields.Many2one("res.company")
-    domain = fields.Char(required=True, default="[]", help="Filter to apply")
+    domain = fields.Char(
+        required=True, default="[]", help="Filter to apply", compute="_compute_domain"
+    )
+    editable_domain = fields.Char(required=True, default="[]", help="Filter to apply")
     model_id = fields.Many2one(
         "ir.model",
         domain=[("is_mail_thread", "=", True)],
@@ -25,13 +28,15 @@ class AutomationConfiguration(models.Model):
         ondelete="cascade",
         help="Model where the configuration is applied",
     )
+    filter_id = fields.Many2one("automation.filter")
+    filter_domain = fields.Binary(compute="_compute_filter_domain")
     model = fields.Char(related="model_id.model")
     field_id = fields.Many2one(
         "ir.model.fields",
         domain="[('model_id', '=', model_id), "
         "('ttype', 'in', ['char', 'selection', 'integer', 'text', 'many2one'])]",
         help="Used to avoid duplicates",
-    )  # TODO: filter by this field??
+    )
     state = fields.Selection(
         [("draft", "Draft"), ("run", "Running"), ("stop", "Stopped")],
         default="draft",
@@ -52,6 +57,13 @@ class AutomationConfiguration(models.Model):
     activity_mail_count = fields.Integer(compute="_compute_activity_count")
     activity_action_count = fields.Integer(compute="_compute_activity_count")
     click_count = fields.Integer(compute="_compute_click_count")
+
+    @api.depends("filter_id.domain", "filter_id", "editable_domain")
+    def _compute_domain(self):
+        for record in self:
+            record.domain = (
+                record.filter_id and record.filter_id.domain
+            ) or record.editable_domain
 
     @api.depends()
     def _compute_click_count(self):
@@ -95,6 +107,17 @@ class AutomationConfiguration(models.Model):
             record.record_done_count = mapped_data[record.id].get("done", 0)
             record.record_run_count = mapped_data[record.id].get("run", 0)
             record.record_count = sum(mapped_data[record.id].values())
+
+    @api.depends("model_id")
+    def _compute_filter_domain(self):
+        for record in self:
+            record.filter_domain = (
+                [] if not record.model_id else [("model_id", "=", record.model_id.id)]
+            )
+
+    @api.onchange("filter_id")
+    def _onchange_filter(self):
+        self.model_id = self.filter_id.model_id
 
     def start_automation(self):
         self.ensure_one()
@@ -182,3 +205,13 @@ class AutomationConfiguration(models.Model):
 
     def _group_expand_states(self, states, domain, order):
         return [key for key, _val in self._fields["state"].selection]
+
+    def save_filter(self):
+        self.ensure_one()
+        self.filter_id = self.env["automation.filter"].create(
+            {
+                "name": self.name,
+                "domain": self.editable_domain,
+                "model_id": self.model_id.id,
+            }
+        )
