@@ -69,6 +69,11 @@
                     <group>
                         <field name="active" invisible="1" />
                         <field
+                            name="tag_ids"
+                            widget="many2many_tags"
+                            options="{'color_field': 'color'}"
+                        />
+                        <field
                             name="model_id"
                             options="{'no_create_edit': True, 'no_open': True}"
                         />
@@ -427,6 +432,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name" />
+                <field name="tag_ids" />
                 <separator />
                 <filter name="draft" string="Draft" domain="[('state','=', 'draft')]" />
                 <filter name="run" string="Run" domain="[('state','=', 'run')]" />
@@ -451,6 +457,11 @@
                         <div class="oe_kanban_card oe_kanban_global_click">
                             <div class="row">
                                 <field name="name" class="o_text_overflow" />
+                                <field
+                                    name="tag_ids"
+                                    widget="many2many_tags"
+                                    options="{'color_field': 'color'}"
+                                />
                             </div>
                             <div class="row mt8">
                                 <div class="col-4 text-center text-black-50">

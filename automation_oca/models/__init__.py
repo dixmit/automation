@@ -6,3 +6,4 @@ from . import mail_mail
 from . import mail_thread
 from . import link_tracker
 from . import automation_filter
+from . import automation_tag

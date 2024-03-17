@@ -21,6 +21,7 @@
         "views/automation_configuration.xml",
         "views/link_tracker_clicks.xml",
         "views/automation_filter.xml",
+        "views/automation_tag.xml",
         "data/cron.xml",
     ],
     "assets": {

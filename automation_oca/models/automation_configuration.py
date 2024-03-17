@@ -16,6 +16,7 @@ class AutomationConfiguration(models.Model):
 
     name = fields.Char(required=True)
     active = fields.Boolean(default=True)
+    tag_ids = fields.Many2many("automation.tag")
     company_id = fields.Many2one("res.company")
     domain = fields.Char(
         required=True, default="[]", help="Filter to apply", compute="_compute_domain"
