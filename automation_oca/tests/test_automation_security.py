@@ -90,3 +90,16 @@ class TestAutomationSecurity(AutomationTestCase):
         )
         self.assertEqual(1, len(record))
         self.assertEqual(self.partner_01, record.resource_ref)
+
+    @users("user_automation_01")
+    def test_security_deleted_record(self):
+        original_record = self.env["automation.record"].search(
+            [("configuration_id", "=", self.configuration.id)]
+        )
+        self.partner_02.unlink()
+        record = self.env["automation.record"].search(
+            [("configuration_id", "=", self.configuration.id)]
+        )
+        self.assertFalse(record)
+        self.assertTrue(original_record)
+        self.assertFalse(original_record.read())

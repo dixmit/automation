@@ -117,9 +117,6 @@ class AutomationRecord(models.Model):
                 dict(ids=list(sub_ids)),
             )
             for eid, res_id, model in self._cr.fetchall():
-                if not model:
-                    result.append(eid)
-                    continue
                 model_data[model][res_id].add(eid)
 
         for model, targets in model_data.items():
@@ -130,7 +127,7 @@ class AutomationRecord(models.Model):
             if missing:
                 for res_id in missing.ids:
                     _logger.warning(
-                        "Deleted record %s,%s is referenced by edi.exchange.record %s",
+                        "Deleted record %s,%s is referenced by automation.record %s",
                         model,
                         res_id,
                         list(targets[res_id]),
@@ -174,8 +171,6 @@ class AutomationRecord(models.Model):
         by_model_rec_ids = defaultdict(set)
         by_model_checker = {}
         for exc_rec in self.sudo():
-            if not exc_rec.related_record_exists:
-                continue
             by_model_rec_ids[exc_rec.model].add(exc_rec.res_id)
             if exc_rec.model not in by_model_checker:
                 by_model_checker[exc_rec.model] = getattr(
