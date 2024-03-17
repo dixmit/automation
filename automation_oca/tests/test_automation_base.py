@@ -407,3 +407,12 @@ class TestAutomationBase(AutomationTestCase):
         self.assertNotEqual(domain, safe_eval(self.configuration.domain))
         self.configuration.filter_id.domain = domain
         self.assertEqual(domain, safe_eval(self.configuration.domain))
+        with Form(self.env["automation.configuration"]) as f:
+            self.assertFalse(f.filter_domain)
+            f.name = "My other configuration"
+            f.filter_id = self.configuration.filter_id
+            self.assertEqual(f.model_id, self.env.ref("base.model_res_partner"))
+            self.assertIn(
+                self.configuration.filter_id,
+                self.env["automation.filter"].search(f.filter_domain),
+            )
