@@ -31,5 +31,7 @@
             "automation_oca/static/src/**/*.scss",
         ],
     },
-    "demo": [],
+    "demo": [
+        "demo/demo.xml",
+    ],
 }

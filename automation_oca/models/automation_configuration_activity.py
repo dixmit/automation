@@ -65,10 +65,6 @@ class AutomationConfigurationActivity(models.Model):
         required=True,
         default="start",
     )
-    trigger_activity_id = fields.Many2one(
-        "automation.configuration.activity",
-        domain="[('configuration_id', '=', configuration_id)]",
-    )
     mail_author_id = fields.Many2one(
         "res.partner", required=True, default=lambda r: r.env.user.id
     )
