@@ -54,6 +54,17 @@
                                             nolabel="1"
                                         /></div>
                                 </div>
+                                <div
+                                    class="row"
+                                    attrs="{'invisible': [('trigger_type', '=', 'start')]}"
+                                >
+                                    <span class="col-2">of</span>
+                                    <div class="col-10">
+                                        <field
+                                            name="parent_id"
+                                            domain="[('configuration_id', '=', configuration_id)]"
+                                        /></div>
+                                </div>
                             </div>
                             <field name="expiry" />
                             <label
@@ -78,11 +89,6 @@
                                         /></div>
                                 </div>
                             </div>
-                            <field
-                                name="parent_id"
-                                attrs="{'invisible': [('trigger_type', '=', 'start')]}"
-                                domain="[('configuration_id', '=', configuration_id)]"
-                            />
                         </group>
                     </group>
                     <group>
