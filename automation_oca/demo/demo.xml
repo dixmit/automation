@@ -20,6 +20,7 @@ for record in records.filtered(lambda r: not r.is_blacklisted):
     <record id="demo_welcome_template" model="mail.template">
         <field name="name">Welcome</field>
         <field name="model_id" ref="base.model_res_partner" />
+        <field name="partner_to">{{object.id}}</field>
         <field name="subject">Welcome! Thanks for being part of our database</field>
         <field name="body_html" type="html">
             <p>Welcome!</p>
