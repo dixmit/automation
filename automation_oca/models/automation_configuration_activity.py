@@ -6,7 +6,8 @@ from collections import defaultdict
 import babel.dates
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 from odoo.osv import expression
 from odoo.tools import get_lang
 from odoo.tools.safe_eval import safe_eval
@@ -195,6 +196,33 @@ class AutomationConfigurationActivity(models.Model):
                     ),
                 ]
             )
+
+    def _check_configuration(self):
+        if self.parent_id and self.trigger_type == "start":
+            raise ValidationError(_("Start configurations cannot have a parent"))
+        if not self.parent_id and self.trigger_type != "start":
+            raise ValidationError(
+                _(
+                    "Configurations without parent must be executed on 'start of workflow'"
+                )
+            )
+        if self.parent_id.activity_type != "mail" and self.trigger_type in [
+            "mail_open",
+            "mail_not_open",
+            "mail_reply",
+            "mail_not_reply",
+            "mail_click",
+            "mail_not_clicked",
+            "mail_bounce",
+        ]:
+            raise ValidationError(
+                _("Configurations triggered from mail must come from a mail activity")
+            )
+
+    @api.constrains("parent_id", "parent_id.activity_type", "trigger_type")
+    def _check_parent_configuration(self):
+        for record in self:
+            record._check_configuration()
 
     def _get_record_activity_scheduled_date(self):
         if self.trigger_type in [

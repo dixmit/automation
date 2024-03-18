@@ -416,3 +416,17 @@ class TestAutomationBase(AutomationTestCase):
                 self.configuration.filter_id,
                 self.env["automation.filter"].search(f.filter_domain),
             )
+
+    def test_constrains_mail(self):
+        activity = self.create_server_action()
+        with self.assertRaises(ValidationError):
+            self.create_server_action(parent_id=activity.id, trigger_type="mail_bounce")
+
+    def test_constrains_start_with_parent(self):
+        activity = self.create_server_action()
+        with self.assertRaises(ValidationError):
+            self.create_server_action(parent_id=activity.id, trigger_type="start")
+
+    def test_constrains_no_start_without_parent(self):
+        with self.assertRaises(ValidationError):
+            self.create_server_action(parent_id=False, trigger_type="activity")
