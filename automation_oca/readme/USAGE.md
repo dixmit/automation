@@ -24,3 +24,18 @@ All the activities need to specify the moment of execution. We will set the numb
 - `Mail clicked`: It will be executed at the previously-configured time after the links of the mail from the previous activity are clicked.
 - `Mail not clicked`: It will be executed at the previously-configured time after the mail from the previous activity is opened and no links are clicked.
 - `Mail bounced`: It will be executed at the previously-configured time after the mail from the previous activity is bounced back for any reason.
+
+Important to remember to define a proper template when sending the email.
+It will the template without using a notification template.
+Also, it is important to define correctly the text partner or email to field on the template
+
+Records creation
+----------------
+
+Records are created using a cron action. This action is executed every 6 hours by default.
+
+Activity execution
+------------------
+
+Activities are executed using a cron action. This action is executed every hour by default.
+On the record view, you can execute manually an action.
