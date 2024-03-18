@@ -138,12 +138,18 @@ class AutomationConfiguration(models.Model):
         for record in self.search([("state", "=", "run")]):
             record.run_automation()
 
-    def run_automation(self):
-        self.ensure_one()
-        if self.state != "run":
-            return
+    def _get_automation_records_to_create(self):
+        """
+        We will find all the records that fulfill the domain but don't have a record created.
+        Also, we need to check by autencity field if defined.
+
+        In order to do this, we will add some extra joins on the query of the domain
+        """
         domain = safe_eval(self.domain)
         Record = self.env[self.model_id.model]
+        if self.company_id and "company_id" in Record._fields:
+            # In case of company defined, we add only if the records have company field
+            domain += [("company_id", "=", self.company_id.id)]
         query = Record._where_calc(domain)
         alias = query.left_join(
             query._tables[Record._table],
@@ -156,6 +162,8 @@ class AutomationConfiguration(models.Model):
         )
         query.add_where("{}.id is NULL".format(alias))
         if self.field_id:
+            # In case of unicity field defined, we need to add this
+            # left join to find already created records
             linked_tab = query.left_join(
                 query._tables[Record._table],
                 self.field_id.name,
@@ -174,6 +182,9 @@ class AutomationConfiguration(models.Model):
             )
             query.add_where("{}.id is NULL".format(alias2))
             from_clause, where_clause, params = query.get_sql()
+            # We also need to find with a group by in order to avoid duplication
+            # when we have both records created between two executions
+            # (first one has priority)
             query_str = "SELECT {} FROM {} WHERE {}{}{}{} GROUP BY {}".format(
                 ", ".join([f'MIN("{next(iter(query._tables))}".id) as id']),
                 from_clause,
@@ -186,8 +197,13 @@ class AutomationConfiguration(models.Model):
         else:
             query_str, params = query.select()
         self.env.cr.execute(query_str, params)
-        records = Record.browse([r[0] for r in self.env.cr.fetchall()])
-        for record in records:
+        return Record.browse([r[0] for r in self.env.cr.fetchall()])
+
+    def run_automation(self):
+        self.ensure_one()
+        if self.state != "run":
+            return
+        for record in self._get_automation_records_to_create():
             self._create_record(record)
 
     def _create_record(self, record):
@@ -205,6 +221,9 @@ class AutomationConfiguration(models.Model):
         }
 
     def _group_expand_states(self, states, domain, order):
+        """
+        This is used to show all the states on the kanban view
+        """
         return [key for key, _val in self._fields["state"].selection]
 
     def save_filter(self):

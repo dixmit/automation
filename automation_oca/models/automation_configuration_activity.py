@@ -86,6 +86,10 @@ class AutomationConfigurationActivity(models.Model):
         if self.trigger_type == "start":
             self.parent_id = False
 
+    ########################################
+    # Graph computed fields ################
+    ########################################
+
     @api.depends()
     def _compute_graph_data(self):
         total = self.env["automation.record.activity"].read_group(
