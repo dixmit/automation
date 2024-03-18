@@ -9,11 +9,13 @@
     <record model="ir.ui.menu" id="automation_reporting_root_menu">
         <field name="name">Reporting</field>
         <field name="parent_id" ref="automation_root_menu" />
+        <field name="groups_id" eval="[(4, ref('group_automation_manager'))]" />
         <field name="sequence" eval="40" />
     </record>
     <record model="ir.ui.menu" id="automation_config_root_menu">
         <field name="name">Configuration</field>
         <field name="parent_id" ref="automation_root_menu" />
+        <field name="groups_id" eval="[(4, ref('group_automation_manager'))]" />
         <field name="sequence" eval="90" />
     </record>
 </odoo>

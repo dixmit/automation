@@ -30,7 +30,7 @@ Automation Oca
 
 This module allows to automate several process according to some rules.
 
-This is great for creating automated actions on your database like:
+This is useful for creating automated actions on your database like:
 
 -  Send a welcome email to all new partners (or filtered according to
    some rules)
