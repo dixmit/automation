@@ -120,6 +120,12 @@ class AutomationConfiguration(models.Model):
     def _onchange_filter(self):
         self.model_id = self.filter_id.model_id
 
+    @api.onchange("model_id")
+    def _onchange_model(self):
+        self.editable_domain = []
+        self.filter_id = False
+        self.automation_activity_ids = [(5, 0, 0)]
+
     def start_automation(self):
         self.ensure_one()
         if self.state != "draft":

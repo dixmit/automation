@@ -1,7 +1,7 @@
 # Copyright 2024 Dixmit
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class AutomationFilter(models.Model):
@@ -18,3 +18,7 @@ class AutomationFilter(models.Model):
     )
     model = fields.Char(related="model_id.model")
     domain = fields.Char(required=True, default="[]", help="Filter to apply")
+
+    @api.onchange("model_id")
+    def _onchange_model(self):
+        self.domain = []

@@ -395,7 +395,7 @@ class TestAutomationBase(AutomationTestCase):
             ),
         )
 
-    def test_filter_domain(self):
+    def test_configuration_filter_domain(self):
         domain = [("partner_id", "=", self.partner_01.id)]
         self.assertFalse(self.configuration.filter_id)
         self.configuration.editable_domain = domain
@@ -416,6 +416,16 @@ class TestAutomationBase(AutomationTestCase):
                 self.configuration.filter_id,
                 self.env["automation.filter"].search(f.filter_domain),
             )
+            f.model_id = self.env.ref("base.model_res_users")
+            self.assertFalse(f.filter_id)
+
+    def test_filter_onchange(self):
+        with Form(self.env["automation.filter"]) as f:
+            f.name = "My other configuration"
+            f.model_id = self.env.ref("base.model_res_partner")
+            f.domain = [("id", "=", 1)]
+            f.model_id = self.env.ref("base.model_res_users")
+            self.assertFalse(safe_eval(f.domain))
 
     def test_constrains_mail(self):
         activity = self.create_server_action()
