@@ -101,6 +101,7 @@ class AutomationConfigurationActivity(models.Model):
                     ">=",
                     fields.Date.context_today(self) + relativedelta(days=-14),
                 ),
+                ("is_test", "=", False),
             ],
             ["configuration_activity_id"],
             ["configuration_activity_id", "processed_on:day"],
@@ -115,6 +116,7 @@ class AutomationConfigurationActivity(models.Model):
                     fields.Date.context_today(self) + relativedelta(days=-14),
                 ),
                 ("state", "=", "done"),
+                ("is_test", "=", False),
             ],
             ["configuration_activity_id"],
             ["configuration_activity_id", "processed_on:day"],
@@ -164,12 +166,14 @@ class AutomationConfigurationActivity(models.Model):
                 [
                     ("configuration_activity_id", "=", record.id),
                     ("state", "=", "done"),
+                    ("is_test", "=", False),
                 ]
             )
             record.graph_error = self.env["automation.record.activity"].search_count(
                 [
                     ("configuration_activity_id", "=", record.id),
                     ("state", "in", ["expired", "rejected", "error", "cancel"]),
+                    ("is_test", "=", False),
                 ]
             )
 

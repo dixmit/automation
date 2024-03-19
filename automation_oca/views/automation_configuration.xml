@@ -30,6 +30,13 @@
                         attrs="{'invisible': [('state', '!=', 'stop')]}"
                     />
                     <button
+                        type="action"
+                        name="%(automation_configuration_test_act_window)s"
+                        string="Test"
+                        class="btn-warning"
+                        groups="automation_oca.group_automation_manager"
+                    />
+                    <button
                         type="object"
                         name="run_automation"
                         class="btn-primary"
@@ -49,6 +56,19 @@
                         >
                             <field
                                 name="record_count"
+                                widget="statinfo"
+                                string="Records"
+                            />
+                        </button>
+                        <button
+                            name="%(automation_record_configuration_test_act_window)s"
+                            type="action"
+                            class="oe_stat_button"
+                            icon="fa-flask"
+                            attrs="{'invisible': [('record_test_count', '=', 0)]}"
+                        >
+                            <field
+                                name="record_test_count"
                                 widget="statinfo"
                                 string="Records"
                             />

@@ -15,6 +15,7 @@
         "security/security.xml",
         "security/ir.model.access.csv",
         "views/menu.xml",
+        "wizards/automation_configuration_test.xml",
         "views/automation_record.xml",
         "views/automation_record_activity.xml",
         "views/automation_configuration_activity.xml",

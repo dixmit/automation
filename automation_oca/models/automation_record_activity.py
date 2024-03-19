@@ -65,6 +65,7 @@ class AutomationRecordActivity(models.Model):
     mail_clicked_on = fields.Datetime(readonly=True)
     mail_replied_on = fields.Datetime(readonly=True)
     mail_opened_on = fields.Datetime(readonly=True)
+    is_test = fields.Boolean(related="record_id.is_test", store=True)
 
     @api.depends("parent_id", "parent_id.parent_position")
     def _compute_parent_position(self):
@@ -164,7 +165,9 @@ class AutomationRecordActivity(models.Model):
         composer = composer.with_context(active_ids=res_ids, **extra_context)
         # auto-commit except in testing mode
         auto_commit = not getattr(threading.current_thread(), "testing", False)
-        composer._action_send_mail(auto_commit=auto_commit)
+        if not self.is_test:
+            # We just abort the sending, but we want to check how the generation works
+            composer._action_send_mail(auto_commit=auto_commit)
         self.mail_status = "sent"
         self._fill_childs()
         return

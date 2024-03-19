@@ -11,7 +11,12 @@
                     <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
-                    <!-- TODO -->
+                    <widget
+                        name="web_ribbon"
+                        title="Test"
+                        bg_color="text-bg-danger"
+                        attrs="{'invisible': [('is_test', '=', False)]}"
+                    />
 
                     <div class="oe_title">
                         <h1><field
@@ -22,6 +27,7 @@
                     </div>
                     <group>
                         <field name="configuration_id" />
+                        <field name="is_test" invisible="1" />
                     </group>
                     <field
                         name="automation_activity_ids"
@@ -315,7 +321,21 @@
         <field name="name">Records</field>
         <field name="res_model">automation.record</field>
         <field name="view_mode">tree,form</field>
-        <field name="domain">[('configuration_id', '=', active_id)]</field>
+        <field
+            name="domain"
+        >[('configuration_id', '=', active_id), ('is_test', '=', False)]</field>
+        <field name="context">{}</field>
+    </record>
+    <record
+        model="ir.actions.act_window"
+        id="automation_record_configuration_test_act_window"
+    >
+        <field name="name">Test Records</field>
+        <field name="res_model">automation.record</field>
+        <field name="view_mode">tree,form</field>
+        <field
+            name="domain"
+        >[('configuration_id', '=', active_id), ('is_test', '=', True)]</field>
         <field name="context">{}</field>
     </record>
 

@@ -38,6 +38,7 @@ class AutomationRecord(models.Model):
     automation_activity_ids = fields.One2many(
         "automation.record.activity", inverse_name="record_id", readonly=True
     )
+    is_test = fields.Boolean()
 
     @api.model
     def _selection_target_model(self):

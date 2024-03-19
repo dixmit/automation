@@ -52,6 +52,7 @@ class AutomationConfiguration(models.Model):
         inverse_name="configuration_id",
         domain=[("parent_id", "=", False)],
     )
+    record_test_count = fields.Integer(compute="_compute_record_test_count")
     record_count = fields.Integer(compute="_compute_record_count")
     record_done_count = fields.Integer(compute="_compute_record_count")
     record_run_count = fields.Integer(compute="_compute_record_count")
@@ -81,7 +82,11 @@ class AutomationConfiguration(models.Model):
     @api.depends()
     def _compute_activity_count(self):
         data = self.env["automation.record.activity"].read_group(
-            [("configuration_id", "in", self.ids), ("state", "=", "done")],
+            [
+                ("configuration_id", "in", self.ids),
+                ("state", "=", "done"),
+                ("is_test", "=", False),
+            ],
             [],
             ["configuration_id", "activity_type"],
             lazy=False,
@@ -96,7 +101,7 @@ class AutomationConfiguration(models.Model):
     @api.depends()
     def _compute_record_count(self):
         data = self.env["automation.record"].read_group(
-            [("configuration_id", "in", self.ids)],
+            [("configuration_id", "in", self.ids), ("is_test", "=", False)],
             [],
             ["configuration_id", "state"],
             lazy=False,
@@ -108,6 +113,18 @@ class AutomationConfiguration(models.Model):
             record.record_done_count = mapped_data[record.id].get("done", 0)
             record.record_run_count = mapped_data[record.id].get("run", 0)
             record.record_count = sum(mapped_data[record.id].values())
+
+    @api.depends()
+    def _compute_record_test_count(self):
+        data = self.env["automation.record"].read_group(
+            [("configuration_id", "in", self.ids), ("is_test", "=", True)],
+            [],
+            ["configuration_id"],
+            lazy=False,
+        )
+        mapped_data = {d["configuration_id"][0]: d["__count"] for d in data}
+        for record in self:
+            record.record_test_count = mapped_data.get(record.id, 0)
 
     @api.depends("model_id")
     def _compute_filter_domain(self):
@@ -164,7 +181,8 @@ class AutomationConfiguration(models.Model):
             "automation_record",
             "res_id",
             "automation_record",
-            "{rhs}.model = %s AND {rhs}.configuration_id = %s",
+            "{rhs}.model = %s AND {rhs}.configuration_id = %s AND "
+            "({rhs}.is_test IS NULL OR NOT {rhs}.is_test)",
             (Record._name, self.id),
         )
         query.add_where("{}.id is NULL".format(alias))
@@ -184,7 +202,8 @@ class AutomationConfiguration(models.Model):
                 "automation_record",
                 "res_id",
                 "automation_record_linked",
-                "{rhs}.model = %s AND {rhs}.configuration_id = %s",
+                "{rhs}.model = %s AND {rhs}.configuration_id = %s AND "
+                "({rhs}.is_test IS NULL OR NOT {rhs}.is_test)",
                 (Record._name, self.id),
             )
             query.add_where("{}.id is NULL".format(alias2))
@@ -213,11 +232,14 @@ class AutomationConfiguration(models.Model):
         for record in self._get_automation_records_to_create():
             self._create_record(record)
 
-    def _create_record(self, record):
-        return self.env["automation.record"].create(self._create_record_vals(record))
+    def _create_record(self, record, **kwargs):
+        return self.env["automation.record"].create(
+            self._create_record_vals(record, **kwargs)
+        )
 
-    def _create_record_vals(self, record):
+    def _create_record_vals(self, record, **kwargs):
         return {
+            **kwargs,
             "res_id": record.id,
             "model": record._name,
             "configuration_id": self.id,
