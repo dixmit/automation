@@ -124,6 +124,7 @@ class AutomationConfiguration(models.Model):
     def _onchange_model(self):
         self.editable_domain = []
         self.filter_id = False
+        self.field_id = False
         self.automation_activity_ids = [(5, 0, 0)]
 
     def start_automation(self):
