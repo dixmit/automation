@@ -196,9 +196,11 @@ class TestAutomationBase(AutomationTestCase):
         self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.assertEqual(0, self.configuration.record_count)
+        self.assertEqual(0, self.configuration.record_test_count)
         self.env["automation.configuration"].cron_automation()
         self.configuration.invalidate_recordset()
         self.assertEqual(1, self.configuration.record_count)
+        self.assertEqual(0, self.configuration.record_test_count)
 
     def test_start_configuration_twice_exception(self):
         """
@@ -440,3 +442,23 @@ class TestAutomationBase(AutomationTestCase):
     def test_constrains_no_start_without_parent(self):
         with self.assertRaises(ValidationError):
             self.create_server_action(parent_id=False, trigger_type="activity")
+
+    def test_is_test_behavior(self):
+        """
+        We want to ensure that no mails are sent on tests
+        """
+        self.create_server_action()
+        with Form(
+            self.env["automation.configuration.test"].with_context(
+                default_configuration_id=self.configuration.id,
+                defaul_model=self.configuration.model,
+            )
+        ) as f:
+            self.assertTrue(f.resource_ref)
+            f.resource_ref = "%s,%s" % (self.partner_01._name, self.partner_01.id)
+        wizard = f.save()
+        wizard_action = wizard.test_record()
+        record = self.env[wizard_action["res_model"]].browse(wizard_action["res_id"])
+        self.assertEqual(self.configuration, record.configuration_id)
+        self.assertEqual(1, self.configuration.record_test_count)
+        self.assertEqual(0, self.configuration.record_count)

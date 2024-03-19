@@ -23,6 +23,7 @@
                             <field name="model" invisible="1" />
                             <field
                                 name="server_action_id"
+                                context="{'default_model_id': model_id}"
                                 attrs="{'invisible':[('activity_type', '!=', 'action')], 'required': [('activity_type', '=', 'action')]}"
                             />
                             <field

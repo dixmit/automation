@@ -2,7 +2,7 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import tools
-from odoo.tests.common import HttpCase
+from odoo.tests.common import Form, HttpCase
 
 from odoo.addons.mail.tests.common import MockEmail
 
@@ -61,7 +61,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         messages_01 = self.partner_01.message_ids
-        self.env["automation.record.activity"]._cron_automation_activities()
+        with self.mock_mail_gateway():
+            self.env["automation.record.activity"]._cron_automation_activities()
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.activity"].search(
             [("configuration_activity_id", "=", activity.id)]
         )
@@ -80,7 +82,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
-        self.env["automation.record.activity"]._cron_automation_activities()
+        with self.mock_mail_gateway():
+            self.env["automation.record.activity"]._cron_automation_activities()
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.activity"].search(
             [("configuration_activity_id", "=", activity.id)]
         )
@@ -106,381 +110,395 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
     def test_reply(self):
         """
         Now we will check the execution of scheduled activities"""
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_reply"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_reply"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
-            )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertFalse(record_child_activity.scheduled_date)
-            self.gateway_mail_reply_wrecord(
-                MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
-            )
-            self.assertEqual("reply", record_activity.mail_status)
-            self.assertTrue(record_child_activity.scheduled_date)
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertFalse(record_child_activity.scheduled_date)
+        self.gateway_mail_reply_wrecord(
+            MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
+        )
+        self.assertEqual("reply", record_activity.mail_status)
+        self.assertTrue(record_child_activity.scheduled_date)
 
     def test_no_reply(self):
         """
         Now we will check the not reply validation. To remember:
         if it is not opened, the schedule date of the child task will be false
         """
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_not_reply"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_not_reply"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
-            )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertFalse(record_child_activity.scheduled_date)
-            self.url_open(record_activity._get_mail_tracking_url())
-            self.assertEqual("open", record_activity.mail_status)
-            self.assertTrue(record_child_activity.scheduled_date)
-            self.gateway_mail_reply_wrecord(
-                MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
-            )
-            self.assertEqual("reply", record_activity.mail_status)
-            self.env["automation.record.activity"]._cron_automation_activities()
-            self.assertEqual("rejected", record_child_activity.state)
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertFalse(record_child_activity.scheduled_date)
+        self.url_open(record_activity._get_mail_tracking_url())
+        self.assertEqual("open", record_activity.mail_status)
+        self.assertTrue(record_child_activity.scheduled_date)
+        self.gateway_mail_reply_wrecord(
+            MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
+        )
+        self.assertEqual("reply", record_activity.mail_status)
+        self.env["automation.record.activity"]._cron_automation_activities()
+        self.assertEqual("rejected", record_child_activity.state)
 
     def test_open(self):
         """
         Now we will check the execution of scheduled activities"""
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_open"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_open"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
-            )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertFalse(record_child_activity.scheduled_date)
-            self.url_open(record_activity._get_mail_tracking_url())
-            self.assertEqual("open", record_activity.mail_status)
-            self.assertTrue(record_child_activity.scheduled_date)
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertFalse(record_child_activity.scheduled_date)
+        self.url_open(record_activity._get_mail_tracking_url())
+        self.assertEqual("open", record_activity.mail_status)
+        self.assertTrue(record_child_activity.scheduled_date)
 
     def test_open_wrong_code(self):
         """
         We wan to ensure that the code is checked on the call
         """
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_open"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_open"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
-            )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertFalse(record_child_activity.scheduled_date)
-            self.url_open(
-                "/automation_oca/track/%s/INVENTED_CODE/blank.gif" % record_activity.id
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertFalse(record_child_activity.scheduled_date)
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertFalse(record_child_activity.scheduled_date)
+        self.url_open(
+            "/automation_oca/track/%s/INVENTED_CODE/blank.gif" % record_activity.id
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertFalse(record_child_activity.scheduled_date)
 
     def test_no_open(self):
         """
         Now we will check the not open validation when it is not opened (should be executed)
         """
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_not_open"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_not_open"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
-            )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertTrue(record_child_activity.scheduled_date)
-            self.env["automation.record.activity"]._cron_automation_activities()
-            self.assertEqual("done", record_child_activity.state)
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertTrue(record_child_activity.scheduled_date)
+        self.env["automation.record.activity"]._cron_automation_activities()
+        self.assertEqual("done", record_child_activity.state)
 
     def test_no_open_rejected(self):
         """
         Now we will check the not open validation when it was already opened (rejection)
         """
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_not_open"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_not_open"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
-            )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertTrue(record_child_activity.scheduled_date)
-            self.url_open(record_activity._get_mail_tracking_url())
-            self.assertEqual("open", record_activity.mail_status)
-            self.env["automation.record.activity"]._cron_automation_activities()
-            self.assertEqual("rejected", record_child_activity.state)
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertTrue(record_child_activity.scheduled_date)
+        self.url_open(record_activity._get_mail_tracking_url())
+        self.assertEqual("open", record_activity.mail_status)
+        self.env["automation.record.activity"]._cron_automation_activities()
+        self.assertEqual("rejected", record_child_activity.state)
 
     def test_click(self):
         """
         Now we will check the execution of scheduled activities that should happen
         after a click
         """
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_click"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.env["link.tracker"].search(
+            [("url", "=", "https://www.twitter.com")]
+        ).unlink()
+        self.configuration.start_automation()
+        self.assertEqual(0, self.configuration.click_count)
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_click"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.env["link.tracker"].search(
-                [("url", "=", "https://www.twitter.com")]
-            ).unlink()
-            self.configuration.start_automation()
-            self.assertEqual(0, self.configuration.click_count)
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.configuration.invalidate_recordset()
+        self.assertEqual(0, self.configuration.click_count)
+        self.assertTrue(record_child_activity)
+        self.assertFalse(record_child_activity.scheduled_date)
+        self.url_open(record_activity._get_mail_tracking_url())
+        self.assertEqual("open", record_activity.mail_status)
+        self.configuration.invalidate_recordset()
+        self.assertEqual(0, self.configuration.click_count)
+        self.assertFalse(record_child_activity.scheduled_date)
+        tracker = self.env["link.tracker"].search(
+            [("url", "=", "https://www.twitter.com")]
+        )
+        self.assertTrue(tracker)
+        self.url_open(
+            "/r/%s/au/%s/%s"
+            % (
+                tracker.code,
+                record_activity.id,
+                record_activity._get_mail_tracking_token(),
             )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("open", record_activity.mail_status)
+        self.assertEqual(
+            1,
+            self.env["link.tracker.click"].search_count(
+                [
+                    ("automation_record_activity_id", "=", record_activity.id),
+                    ("link_id", "=", tracker.id),
+                ]
+            ),
+        )
+        self.assertTrue(record_child_activity.scheduled_date)
+        self.configuration.invalidate_recordset()
+        self.assertEqual(1, self.configuration.click_count)
+        # Now we will check that a second click does not generate a second log
+        self.url_open(
+            "/r/%s/au/%s/%s"
+            % (
+                tracker.code,
+                record_activity.id,
+                record_activity._get_mail_tracking_token(),
             )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.configuration.invalidate_recordset()
-            self.assertEqual(0, self.configuration.click_count)
-            self.assertTrue(record_child_activity)
-            self.assertFalse(record_child_activity.scheduled_date)
-            self.url_open(record_activity._get_mail_tracking_url())
-            self.assertEqual("open", record_activity.mail_status)
-            self.configuration.invalidate_recordset()
-            self.assertEqual(0, self.configuration.click_count)
-            self.assertFalse(record_child_activity.scheduled_date)
-            tracker = self.env["link.tracker"].search(
-                [("url", "=", "https://www.twitter.com")]
-            )
-            self.assertTrue(tracker)
-            self.url_open(
-                "/r/%s/au/%s/%s"
-                % (
-                    tracker.code,
-                    record_activity.id,
-                    record_activity._get_mail_tracking_token(),
-                )
-            )
-            self.assertEqual("open", record_activity.mail_status)
-            self.assertEqual(
-                1,
-                self.env["link.tracker.click"].search_count(
-                    [
-                        ("automation_record_activity_id", "=", record_activity.id),
-                        ("link_id", "=", tracker.id),
-                    ]
-                ),
-            )
-            self.assertTrue(record_child_activity.scheduled_date)
-
-            self.configuration.invalidate_recordset()
-            self.assertEqual(1, self.configuration.click_count)
-            # Now we will check that a second click does not generate a second log
-            self.url_open(
-                "/r/%s/au/%s/%s"
-                % (
-                    tracker.code,
-                    record_activity.id,
-                    record_activity._get_mail_tracking_token(),
-                )
-            )
-            self.assertEqual(
-                1,
-                self.env["link.tracker.click"].search_count(
-                    [
-                        ("automation_record_activity_id", "=", record_activity.id),
-                        ("link_id", "=", tracker.id),
-                    ]
-                ),
-            )
-            self.configuration.invalidate_recordset()
-            self.assertEqual(1, self.configuration.click_count)
+        )
+        self.assertEqual(
+            1,
+            self.env["link.tracker.click"].search_count(
+                [
+                    ("automation_record_activity_id", "=", record_activity.id),
+                    ("link_id", "=", tracker.id),
+                ]
+            ),
+        )
+        self.configuration.invalidate_recordset()
+        self.assertEqual(1, self.configuration.click_count)
 
     def test_click_wrong_url(self):
         """
         Now we will check that no log is processed when the clicked url is malformed.
         That happens because we add a code information on the URL.
         """
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_click"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_click"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertFalse(record_child_activity.scheduled_date)
+        tracker = self.env["link.tracker"].search(
+            [("url", "=", "https://www.twitter.com")]
+        )
+        self.assertTrue(tracker)
+        self.url_open(
+            "/r/%s/au/%s/1234"
+            % (
+                tracker.code,
+                record_activity.id,
             )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertFalse(record_child_activity.scheduled_date)
+        # Now we check the case where the code is not found
+        tracker.unlink()
+        self.url_open(
+            "/r/%s/au/%s/%s"
+            % (
+                tracker.code,
+                record_activity.id,
+                record_activity._get_mail_tracking_token(),
             )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertFalse(record_child_activity.scheduled_date)
-            tracker = self.env["link.tracker"].search(
-                [("url", "=", "https://www.twitter.com")]
-            )
-            self.assertTrue(tracker)
-            self.url_open(
-                "/r/%s/au/%s/1234"
-                % (
-                    tracker.code,
-                    record_activity.id,
-                )
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertFalse(record_child_activity.scheduled_date)
-            # Now we check the case where the code is not found
-            tracker.unlink()
-            self.url_open(
-                "/r/%s/au/%s/%s"
-                % (
-                    tracker.code,
-                    record_activity.id,
-                    record_activity._get_mail_tracking_token(),
-                )
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertFalse(record_child_activity.scheduled_date)
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertFalse(record_child_activity.scheduled_date)
 
     def test_no_click(self):
         """
         Checking the not clicked validation when it is not clicked (should be executed)
         """
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_not_clicked"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_not_clicked"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
-            )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
-            )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertFalse(record_child_activity.scheduled_date)
-            self.url_open(record_activity._get_mail_tracking_url())
-            self.assertEqual("open", record_activity.mail_status)
-            self.assertTrue(record_child_activity.scheduled_date)
-            self.env["automation.record.activity"]._cron_automation_activities()
-            self.assertEqual("done", record_child_activity.state)
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertFalse(record_child_activity.scheduled_date)
+        self.url_open(record_activity._get_mail_tracking_url())
+        self.assertEqual("open", record_activity.mail_status)
+        self.assertTrue(record_child_activity.scheduled_date)
+        self.env["automation.record.activity"]._cron_automation_activities()
+        self.assertEqual("done", record_child_activity.state)
 
     def test_no_click_rejected(self):
         """
         Checking the not clicked validation when it was already clicked
         """
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(
+            parent_id=activity.id, trigger_type="mail_not_clicked"
+        )
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        self.configuration.start_automation()
+        self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            activity = self.create_mail_activity()
-            child_activity = self.create_mail_activity(
-                parent_id=activity.id, trigger_type="mail_not_clicked"
-            )
-            self.configuration.editable_domain = (
-                "[('id', '=', %s)]" % self.partner_01.id
-            )
-            self.configuration.start_automation()
-            self.env["automation.configuration"].cron_automation()
             self.env["automation.record.activity"]._cron_automation_activities()
-            record_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", activity.id)]
+            self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
+        record_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", activity.id)]
+        )
+        record_child_activity = self.env["automation.record.activity"].search(
+            [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.assertEqual("sent", record_activity.mail_status)
+        self.assertTrue(record_child_activity)
+        self.assertFalse(record_child_activity.scheduled_date)
+        self.url_open(record_activity._get_mail_tracking_url())
+        self.assertEqual("open", record_activity.mail_status)
+        self.assertTrue(record_child_activity.scheduled_date)
+        tracker = self.env["link.tracker"].search(
+            [("url", "=", "https://www.twitter.com")]
+        )
+        self.url_open(
+            "/r/%s/au/%s/%s"
+            % (
+                tracker.code,
+                record_activity.id,
+                record_activity._get_mail_tracking_token(),
             )
-            record_child_activity = self.env["automation.record.activity"].search(
-                [("configuration_activity_id", "=", child_activity.id)]
+        )
+        self.env["automation.record.activity"]._cron_automation_activities()
+        self.assertEqual("rejected", record_child_activity.state)
+
+    def test_is_test_behavior(self):
+        """
+        We want to ensure that no mails are sent on tests
+        """
+        self.create_mail_activity()
+        self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
+        with Form(
+            self.env["automation.configuration.test"].with_context(
+                default_configuration_id=self.configuration.id,
+                defaul_model=self.configuration.model,
             )
-            self.assertEqual("sent", record_activity.mail_status)
-            self.assertTrue(record_child_activity)
-            self.assertFalse(record_child_activity.scheduled_date)
-            self.url_open(record_activity._get_mail_tracking_url())
-            self.assertEqual("open", record_activity.mail_status)
-            self.assertTrue(record_child_activity.scheduled_date)
-            tracker = self.env["link.tracker"].search(
-                [("url", "=", "https://www.twitter.com")]
-            )
-            self.url_open(
-                "/r/%s/au/%s/%s"
-                % (
-                    tracker.code,
-                    record_activity.id,
-                    record_activity._get_mail_tracking_token(),
-                )
-            )
-            self.env["automation.record.activity"]._cron_automation_activities()
-            self.assertEqual("rejected", record_child_activity.state)
+        ) as f:
+            self.assertTrue(f.resource_ref)
+            f.resource_ref = "%s,%s" % (self.partner_01._name, self.partner_01.id)
+        wizard = f.save()
+        wizard_action = wizard.test_record()
+        record = self.env[wizard_action["res_model"]].browse(wizard_action["res_id"])
+        self.assertTrue(record)
+        self.assertEqual("scheduled", record.automation_activity_ids.state)
+        self.assertFalse(record.automation_activity_ids.mail_status)
+        with self.mock_mail_gateway():
+            record.automation_activity_ids.run()
+            self.assertNotSentEmail()
+        self.assertEqual("sent", record.automation_activity_ids.mail_status)
