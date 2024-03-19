@@ -96,7 +96,11 @@ class AutomationConfigurationActivity(models.Model):
         total = self.env["automation.record.activity"].read_group(
             [
                 ("configuration_activity_id", "in", self.ids),
-                ("processed_on", ">=", fields.Date.today() + relativedelta(days=-14)),
+                (
+                    "processed_on",
+                    ">=",
+                    fields.Date.context_today(self) + relativedelta(days=-14),
+                ),
             ],
             ["configuration_activity_id"],
             ["configuration_activity_id", "processed_on:day"],
@@ -105,7 +109,11 @@ class AutomationConfigurationActivity(models.Model):
         done = self.env["automation.record.activity"].read_group(
             [
                 ("configuration_activity_id", "in", self.ids),
-                ("processed_on", ">=", fields.Date.today() + relativedelta(days=-14)),
+                (
+                    "processed_on",
+                    ">=",
+                    fields.Date.context_today(self) + relativedelta(days=-14),
+                ),
                 ("state", "=", "done"),
             ],
             ["configuration_activity_id"],
