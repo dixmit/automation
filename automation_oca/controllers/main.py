@@ -35,6 +35,7 @@ class AutomationOCAController(http.Controller):
         response.mimetype = "image/gif"
         response.data = base64.b64decode(
             b"R0lGODlhAQABAIAAANvf7wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+            # This is the code of a blank small image
         )
 
         return response
