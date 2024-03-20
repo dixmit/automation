@@ -37,7 +37,9 @@ class AutomationConfigurationActivity(models.Model):
         "automation.configuration.activity", inverse_name="parent_id"
     )
     activity_type = fields.Selection(
-        [("mail", "Mail"), ("action", "Server Action")], required=True, default="mail"
+        [("mail", "Mail"), ("action", "Server Action"), ("activity", "Activity")],
+        required=True,
+        default="mail",
     )
     trigger_interval_hours = fields.Integer(
         compute="_compute_trigger_interval_hours", store=True
@@ -62,6 +64,8 @@ class AutomationConfigurationActivity(models.Model):
             ("mail_click", "Mail clicked"),
             ("mail_not_clicked", "Mail not clicked"),
             ("mail_bounce", "Mail bounced"),
+            ("activity_done", "Activity has been finished"),
+            ("activity_not_done", "Activity has not been finished"),
         ],
         required=True,
         default="start",
@@ -74,6 +78,58 @@ class AutomationConfigurationActivity(models.Model):
     )
     server_action_id = fields.Many2one(
         "ir.actions.server", domain="[('model_id', '=', model_id)]"
+    )
+    activity_type_id = fields.Many2one(
+        "mail.activity.type",
+        string="Activity",
+        domain="['|', ('res_model', '=', False), ('res_model', '=', model)]",
+        compute="_compute_activity_info",
+        readonly=False,
+        store=True,
+        ondelete="restrict",
+    )
+    activity_summary = fields.Char(
+        "Summary", compute="_compute_activity_info", readonly=False, store=True
+    )
+    activity_note = fields.Html(
+        "Note", compute="_compute_activity_info", readonly=False, store=True
+    )
+    activity_date_deadline_range = fields.Integer(
+        string="Due Date In",
+        compute="_compute_activity_info",
+        readonly=False,
+        store=True,
+    )
+    activity_date_deadline_range_type = fields.Selection(
+        [("days", "Days"), ("weeks", "Weeks"), ("months", "Months")],
+        string="Due type",
+        default="days",
+        compute="_compute_activity_info",
+        readonly=False,
+        store=True,
+    )
+    activity_user_type = fields.Selection(
+        [("specific", "Specific User"), ("generic", "Generic User From Record")],
+        compute="_compute_activity_info",
+        readonly=False,
+        store=True,
+        help="""Use 'Specific User' to always assign the same user on the next activity.
+        Use 'Generic User From Record' to specify the field name of the user
+        to choose on the record.""",
+    )
+    activity_user_id = fields.Many2one(
+        "res.users",
+        string="Responsible",
+        compute="_compute_activity_info",
+        readonly=False,
+        store=True,
+    )
+    activity_user_field_id = fields.Many2one(
+        "ir.model.fields",
+        "User field name",
+        compute="_compute_activity_info",
+        readonly=False,
+        store=True,
     )
     parent_position = fields.Integer(
         compute="_compute_parent_position", recursive=True, store=True
@@ -177,6 +233,22 @@ class AutomationConfigurationActivity(models.Model):
                 ]
             )
 
+    @api.depends("activity_type")
+    def _compute_activity_info(self):
+        for to_reset in self.filtered(lambda act: act.activity_type != "activity"):
+            to_reset.activity_summary = False
+            to_reset.activity_note = False
+            to_reset.activity_date_deadline_range = False
+            to_reset.activity_date_deadline_range_type = False
+            to_reset.activity_user_type = False
+            to_reset.activity_user_id = False
+            to_reset.activity_user_field_id = False
+        for activity in self.filtered(lambda act: act.activity_type == "activity"):
+            if not activity.activity_date_deadline_range_type:
+                activity.activity_date_deadline_range_type = "days"
+            if not activity.activity_user_id:
+                activity.activity_user_id = self.env.user.id
+
     @api.depends("trigger_interval", "trigger_interval_type")
     def _compute_trigger_interval_hours(self):
         for record in self:
@@ -244,6 +316,7 @@ class AutomationConfigurationActivity(models.Model):
             "mail_not_clicked",
             "mail_reply",
             "mail_not_reply",
+            "activity_done",
         ]:
             return False
         return fields.Datetime.now() + relativedelta(

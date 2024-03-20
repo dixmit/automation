@@ -65,6 +65,7 @@ class AutomationRecordActivity(models.Model):
     mail_clicked_on = fields.Datetime(readonly=True)
     mail_replied_on = fields.Datetime(readonly=True)
     mail_opened_on = fields.Datetime(readonly=True)
+    activity_done_on = fields.Datetime(readonly=True)
     is_test = fields.Boolean(related="record_id.is_test", store=True)
 
     @api.depends("parent_id", "parent_id.parent_position")
@@ -88,6 +89,11 @@ class AutomationRecordActivity(models.Model):
         if (
             self.configuration_activity_id.trigger_type == "mail_not_clicked"
             and self.parent_id.mail_clicked_on
+        ):
+            return False
+        if (
+            self.configuration_activity_id.trigger_type == "activity_not_done"
+            and self.parent_id.activity_done_on
         ):
             return False
         return True
@@ -135,6 +141,34 @@ class AutomationRecordActivity(models.Model):
                 ]
             }
         )
+
+    def _run_activity(self):
+        record = self.env[self.record_id.model].browse(self.record_id.res_id)
+
+        vals = {
+            "summary": self.configuration_activity_id.activity_summary or "",
+            "note": self.configuration_activity_id.activity_note or "",
+            "activity_type_id": self.configuration_activity_id.activity_type_id.id,
+            "automation_record_activity_id": self.id,
+        }
+        if self.configuration_activity_id.activity_date_deadline_range > 0:
+            range_type = (
+                self.configuration_activity_id.activity_date_deadline_range_type
+            )
+            vals["date_deadline"] = fields.Date.context_today(self) + relativedelta(
+                **{
+                    range_type: self.configuration_activity_id.activity_date_deadline_range
+                }
+            )
+        user = False
+        if self.configuration_activity_id.activity_user_type == "specific":
+            user = self.activity_user_id
+        elif self.configuration_activity_id.activity_user_type == "generic":
+            user = record[self.configuration_activity_id.activity_user_field_id.name]
+        if user:
+            vals["user_id"] = user.id
+        record.activity_schedule(**vals)
+        self._fill_childs()
 
     def _run_mail(self):
         author_id = self.configuration_activity_id.mail_author_id.id
@@ -222,6 +256,14 @@ class AutomationRecordActivity(models.Model):
             record.scheduled_date = fields.Datetime.now() + relativedelta(
                 **{config.trigger_interval_type: config.trigger_interval}
             )
+
+    def _set_activity_done(self):
+        self.write({"activity_done_on": fields.Datetime.now()})
+        self.child_ids.filtered(
+            lambda r: r.trigger_type == "activity_done"
+            and not r.scheduled_date
+            and r.state == "scheduled"
+        )._activate()
 
     def _set_mail_bounced(self):
         self.write({"mail_status": "bounce"})

@@ -13,6 +13,12 @@ Configure your processes
 Configuration of activities
 ---------------------------
 
+Activities can trigger one of the following options:
+
+- `Email`: Sends an email using a template.
+- `Server Action`: Executes a server action.
+- `Activity`: Creates an activity to the related record.
+
 All the activities need to specify the moment of execution. We will set the number of hours/days and a trigger type:
 
 - `Start of workflow`: It will be executed at the previously-configured time after we create the record.
@@ -24,6 +30,8 @@ All the activities need to specify the moment of execution. We will set the numb
 - `Mail clicked`: It will be executed at the previously-configured time after the links of the mail from the previous activity are clicked.
 - `Mail not clicked`: It will be executed at the previously-configured time after the mail from the previous activity is opened and no links are clicked.
 - `Mail bounced`: It will be executed at the previously-configured time after the mail from the previous activity is bounced back for any reason.
+- `Activity done`: It will be executed at the previously-configured time after the activity from the previous action is done.
+- `Activity not done`: It will be executed at the previously-configured time after the previous action is executed if the related activity is not done.
 
 Important to remember to define a proper template when sending the email.
 It will the template without using a notification template.

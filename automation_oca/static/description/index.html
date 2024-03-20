@@ -415,6 +415,12 @@ records need to be created.</li>
 </div>
 <div class="section" id="configuration-of-activities">
 <h2><a class="toc-backref" href="#toc-entry-3">Configuration of activities</a></h2>
+<p>Activities can trigger one of the following options:</p>
+<ul class="simple">
+<li><tt class="docutils literal">Email</tt>: Sends an email using a template.</li>
+<li><tt class="docutils literal">Server Action</tt>: Executes a server action.</li>
+<li><tt class="docutils literal">Activity</tt>: Creates an activity to the related record.</li>
+</ul>
 <p>All the activities need to specify the moment of execution. We will set
 the number of hours/days and a trigger type:</p>
 <ul class="simple">
@@ -442,6 +448,11 @@ is opened and no links are clicked.</li>
 <li><tt class="docutils literal">Mail bounced</tt>: It will be executed at the previously-configured
 time after the mail from the previous activity is bounced back for
 any reason.</li>
+<li><tt class="docutils literal">Activity done</tt>: It will be executed at the previously-configured
+time after the activity from the previous action is done.</li>
+<li><tt class="docutils literal">Activity not done</tt>: It will be executed at the
+previously-configured time after the previous action is executed if
+the related activity is not done.</li>
 </ul>
 <p>Important to remember to define a proper template when sending the
 email. It will the template without using a notification template. Also,

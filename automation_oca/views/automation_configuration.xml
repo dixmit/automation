@@ -257,11 +257,18 @@
                                                     aria-label="Email"
                                                 />
                                                 <span
-                                                    class="fa fa-cogs"
-                                                    t-else=""
-                                                    title="Other activity"
+                                                    class="fa fa-clock-o"
+                                                    t-if="record.activity_type.raw_value == 'activity'"
+                                                    title="Activity"
                                                     role="img"
-                                                    aria-label="Other activity"
+                                                    aria-label="Activity"
+                                                />
+                                                <span
+                                                    class="fa fa-cogs"
+                                                    t-if="record.activity_type.raw_value == 'action'"
+                                                    title="Action"
+                                                    role="img"
+                                                    aria-label="Action"
                                                 />
                                             </button>
                                             <div
@@ -344,6 +351,30 @@
                                                         title="Add Another Activity"
                                                         role="img"
                                                         aria-label="Add Another Activity"
+                                                    />
+                                                </div>
+                                                <div
+                                                    t-if="record.activity_type.raw_value == 'activity'"
+                                                    trigger-type="activity_done"
+                                                    class="text-success o_automation_kanban_child_add_button"
+                                                >
+                                                    <i
+                                                        class="fa fa-clock-o"
+                                                        title="Activity Done"
+                                                        role="img"
+                                                        aria-label="Activity Done"
+                                                    />
+                                                </div>
+                                                <div
+                                                    t-if="record.activity_type.raw_value == 'activity'"
+                                                    trigger-type="activity_not_done"
+                                                    class="text-danger o_automation_kanban_child_add_button"
+                                                >
+                                                    <i
+                                                        class="fa fa-clock-o"
+                                                        title="Activity Not Done"
+                                                        role="img"
+                                                        aria-label="Activity Not Done"
                                                     />
                                                 </div>
                                                 <div

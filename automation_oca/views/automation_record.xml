@@ -44,6 +44,7 @@
                             <field name="parent_position" />
                             <field name="mail_status" />
                             <field name="mail_clicked_on" />
+                            <field name="activity_done_on" />
                             <field name="state" />
                             <templates>
                                 <div
@@ -145,6 +146,14 @@
                                                         class="fa fa-hand-pointer-o"
                                                     /> Not clicked yet
                                                 </span>
+                                                <span
+                                                    t-elif="record.trigger_type.raw_value == 'activity_done'"
+                                                    class="text-primary"
+                                                >
+                                                    <i
+                                                        class="fa fa-clock-o"
+                                                    /> Activity not done
+                                                </span>
                                             </strong>
                                         </div>
                                     </div>
@@ -161,8 +170,15 @@
                                                     aria-label="Email"
                                                 />
                                                 <span
+                                                    class="fa fa-clock-o"
+                                                    t-if="record.activity_type.raw_value == 'activity'"
+                                                    title="Activity"
+                                                    role="img"
+                                                    aria-label="Activity"
+                                                />
+                                                <span
                                                     class="fa fa-cogs"
-                                                    t-else=""
+                                                    t-if="record.activity_type.raw_value == 'action'"
                                                     title="Other activity"
                                                     role="img"
                                                     aria-label="Other activity"
@@ -198,6 +214,19 @@
                                                     t-if="record.state.raw_value == 'scheduled'"
                                                 />
                                             </div>
+                                        </div>
+                                        <div
+                                            class="o_automation_kanban_states"
+                                            t-if="record.activity_type.raw_value == 'activity' and record.state.raw_value == 'done'"
+                                        >
+                                            <div
+                                                t-attf-class="o_automation_kanban_state {{ record.activity_done_on.raw_value ? 'text-success': 'text-muted' }}"
+                                            ><i
+                                                    class="fa fa-clock-o"
+                                                    title="Activity done"
+                                                    role="img"
+                                                    aria-label="Activity done"
+                                                /> Activity done</div>
                                         </div>
                                         <div
                                             class="o_automation_kanban_states"
