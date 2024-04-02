@@ -95,7 +95,7 @@ class AutomationRecord(models.Model):
             # restrictions do not apply to group "Settings"
             return len(ids) if count else ids
 
-        # TODO highlight orphaned EDI records in UI:
+        # TODO highlight orphaned records in UI:
         #  - self.model + self.res_id are set
         #  - self.record returns empty recordset
         # Remark: self.record is @property, not field
