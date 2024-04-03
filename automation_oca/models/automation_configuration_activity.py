@@ -137,6 +137,17 @@ class AutomationConfigurationActivity(models.Model):
     graph_data = fields.Json(compute="_compute_graph_data")
     graph_done = fields.Integer(compute="_compute_total_graph_data")
     graph_error = fields.Integer(compute="_compute_total_graph_data")
+    is_mail_activity = fields.Boolean(compute="_compute_is_mail_activity", store=True)
+
+    @api.depends("activity_type")
+    def _compute_is_mail_activity(self):
+        mail_activities = self._get_mail_activities()
+        for record in self:
+            record.is_mail_activity = record.activity_type in mail_activities
+
+    @api.model
+    def _get_mail_activities(self):
+        return ["mail"]
 
     @api.onchange("trigger_type")
     def _onchange_trigger_type(self):
@@ -290,7 +301,7 @@ class AutomationConfigurationActivity(models.Model):
                     "Configurations without parent must be executed on 'start of workflow'"
                 )
             )
-        if self.parent_id.activity_type != "mail" and self.trigger_type in [
+        if not self.parent_id.is_mail_activity and self.trigger_type in [
             "mail_open",
             "mail_not_open",
             "mail_reply",

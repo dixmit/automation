@@ -22,56 +22,6 @@
                             <field name="model_id" invisible="1" />
                             <field name="model" invisible="1" />
                         </group>
-                        <group
-                            attrs="{'invisible':[('activity_type', '!=', 'action')]}"
-                        >
-                            <field
-                                name="server_action_id"
-                                context="{'default_model_id': model_id}"
-                                attrs="{'required': [('activity_type', '=', 'action')]}"
-                            />
-                        </group>
-                        <group attrs="{'invisible':[('activity_type', '!=', 'mail')]}">
-                            <field
-                                name="mail_template_id"
-                                attrs="{'required': [('activity_type', '=', 'mail')]}"
-                            />
-                            <field name="mail_author_id" />
-                        </group>
-                        <group
-                            attrs="{'invisible':[('activity_type', '!=', 'activity')]}"
-                        >
-                            <field
-                                name="activity_type_id"
-                                attrs="{'required': [('activity_type', '=', 'activity')]}"
-                            />
-                            <label
-                                for="activity_date_deadline_range"
-                                string="Deadline"
-                            />
-                            <div class="container ps-0">
-                                <div class="row">
-                                    <div class="col-2"><field
-                                            name="activity_date_deadline_range"
-                                            nolabel="1"
-                                        /></div>
-                                    <div class="col-10"><field
-                                            name="activity_date_deadline_range_type"
-                                            nolabel="1"
-                                        /></div>
-                                </div>
-                            </div>
-                            <field name="activity_user_type" />
-                            <field
-                                name="activity_user_id"
-                                attrs="{'invisible': [('activity_user_type', '!=', 'specific')], 'required': [('activity_user_type', '=', 'specific')]}"
-                            />
-                            <field
-                                name="activity_user_field_id"
-                                domain="[('model_id', '=', model_id)]"
-                                attrs="{'invisible': [('activity_user_type', '!=', 'generic')], 'required': [('activity_user_type', '=', 'generic')]}"
-                            />
-                        </group>
                         <group>
                             <label for="trigger_interval" string="Trigger" />
                             <div class="container ps-0">
@@ -127,6 +77,56 @@
                                         /></div>
                                 </div>
                             </div>
+                        </group>
+                        <group
+                            attrs="{'invisible':[('activity_type', '!=', 'action')]}"
+                        >
+                            <field
+                                name="server_action_id"
+                                context="{'default_model_id': model_id}"
+                                attrs="{'required': [('activity_type', '=', 'action')]}"
+                            />
+                        </group>
+                        <group attrs="{'invisible':[('activity_type', '!=', 'mail')]}">
+                            <field
+                                name="mail_template_id"
+                                attrs="{'required': [('activity_type', '=', 'mail')]}"
+                            />
+                            <field name="mail_author_id" />
+                        </group>
+                        <group
+                            attrs="{'invisible':[('activity_type', '!=', 'activity')]}"
+                        >
+                            <field
+                                name="activity_type_id"
+                                attrs="{'required': [('activity_type', '=', 'activity')]}"
+                            />
+                            <label
+                                for="activity_date_deadline_range"
+                                string="Deadline"
+                            />
+                            <div class="container ps-0">
+                                <div class="row">
+                                    <div class="col-2"><field
+                                            name="activity_date_deadline_range"
+                                            nolabel="1"
+                                        /></div>
+                                    <div class="col-10"><field
+                                            name="activity_date_deadline_range_type"
+                                            nolabel="1"
+                                        /></div>
+                                </div>
+                            </div>
+                            <field name="activity_user_type" />
+                            <field
+                                name="activity_user_id"
+                                attrs="{'invisible': [('activity_user_type', '!=', 'specific')], 'required': [('activity_user_type', '=', 'specific')]}"
+                            />
+                            <field
+                                name="activity_user_field_id"
+                                domain="[('model_id', '=', model_id)]"
+                                attrs="{'invisible': [('activity_user_type', '!=', 'generic')], 'required': [('activity_user_type', '=', 'generic')]}"
+                            />
                         </group>
                     </group>
                     <notebook>

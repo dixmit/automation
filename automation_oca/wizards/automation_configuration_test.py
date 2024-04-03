@@ -7,6 +7,7 @@ from odoo import api, fields, models
 class AutomationConfigurationTest(models.TransientModel):
 
     _name = "automation.configuration.test"
+    _description = "Test automation configuration"
 
     configuration_id = fields.Many2one("automation.configuration", required=True)
     model = fields.Char(related="configuration_id.model")

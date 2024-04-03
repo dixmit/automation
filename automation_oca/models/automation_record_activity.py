@@ -28,6 +28,9 @@ class AutomationRecordActivity(models.Model):
     activity_type = fields.Selection(
         related="configuration_activity_id.activity_type", store=True
     )
+    is_mail_activity = fields.Boolean(
+        related="configuration_activity_id.is_mail_activity", store=True
+    )
     scheduled_date = fields.Datetime(readonly=True)
     expiry_date = fields.Datetime(readonly=True)
     processed_on = fields.Datetime(readonly=True)

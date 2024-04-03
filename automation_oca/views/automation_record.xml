@@ -45,6 +45,7 @@
                             <field name="mail_status" />
                             <field name="mail_clicked_on" />
                             <field name="activity_done_on" />
+                            <field name="is_mail_activity" />
                             <field name="state" />
                             <templates>
                                 <div
@@ -230,7 +231,7 @@
                                         </div>
                                         <div
                                             class="o_automation_kanban_states"
-                                            t-if="record.activity_type.raw_value == 'mail' and record.state.raw_value == 'done'"
+                                            t-if="record.is_mail_activity.raw_value and record.state.raw_value == 'done'"
                                         >
                                             <div
                                                 t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value != 'bounced' ? 'text-success': 'text-muted' }}"

@@ -3,6 +3,7 @@
 
 import re
 
+import markupsafe
 import werkzeug.urls
 
 from odoo import api, fields, models, tools
@@ -38,7 +39,9 @@ class MailMail(models.Model):
                         "%s/au/%s/%s"
                         % (url, str(self.automation_record_activity_id.id), token),
                     )
-                    body = body.replace(href, new_href)
+                    body = body.replace(
+                        markupsafe.Markup(href), markupsafe.Markup(new_href)
+                    )
             body = tools.append_content_to_html(
                 body,
                 '<img src="%s"/>'
