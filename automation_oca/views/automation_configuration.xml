@@ -342,14 +342,14 @@
                                                 class="o_automation_kanban_child_add_buttons"
                                             >
                                                 <div
-                                                    trigger-type="activity"
+                                                    trigger-type="after_step"
                                                     class="text-success o_automation_kanban_child_add_button"
                                                 >
                                                     <i
                                                         class="fa fa-code-fork fa-rotate-180 fa-flip-vertical"
-                                                        title="Add Another Activity"
+                                                        title="Add Another Step"
                                                         role="img"
-                                                        aria-label="Add Another Activity"
+                                                        aria-label="Add Another Step"
                                                     />
                                                 </div>
                                                 <div

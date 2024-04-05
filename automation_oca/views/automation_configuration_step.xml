@@ -54,7 +54,11 @@
                                         /></div>
                                 </div>
                             </div>
-                            <field name="expiry" />
+                            <field name="allow_expiry" invisible="1" />
+                            <field
+                                name="expiry"
+                                attrs="{'invisible': [('allow_expiry', '=', False)]}"
+                            />
                             <label
                                 for="expiry_interval"
                                 string="Trigger"

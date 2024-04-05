@@ -48,25 +48,14 @@ class AutomationConfigurationStep(models.Model):
     trigger_interval_type = fields.Selection(
         [("hours", "Hours"), ("days", "Days")], required=True, default="hours"
     )
-    expiry = fields.Boolean()
+    allow_expiry = fields.Boolean(compute="_compute_allow_expiry")
+    expiry = fields.Boolean(compute="_compute_expiry", store=True, readonly=False)
     expiry_interval = fields.Integer()
     expiry_interval_type = fields.Selection(
         [("hours", "Hours"), ("days", "Days")], required=True, default="hours"
     )
     trigger_type = fields.Selection(
-        [
-            ("start", "start of workflow"),
-            ("activity", "execution of another activity"),
-            ("mail_open", "Mail opened"),
-            ("mail_not_open", "Mail not opened"),
-            ("mail_reply", "Mail replied"),
-            ("mail_not_reply", "Mail not replied"),
-            ("mail_click", "Mail clicked"),
-            ("mail_not_clicked", "Mail not clicked"),
-            ("mail_bounce", "Mail bounced"),
-            ("activity_done", "Activity has been finished"),
-            ("activity_not_done", "Activity has not been finished"),
-        ],
+        selection="_trigger_type_selection",
         required=True,
         default="start",
     )
@@ -293,20 +282,80 @@ class AutomationConfigurationStep(models.Model):
             )
 
     @api.model
+    def _trigger_type_selection(self):
+        return [
+            (trigger_id, trigger.get("name", trigger_id))
+            for trigger_id, trigger in self._trigger_types().items()
+        ]
+
+    @api.model
     def _trigger_types(self):
         return {
-            "start": {"name": _("start of workflow"),},
-            "activity": {"name": _("execution of another activity"),},
-            "mail_open": {"name": _("Mail opened"),},
-            "mail_not_open": {"name": _("Mail not opened"),},
-            "mail_reply": {"name": _("Mail replied"),},
-            "mail_not_reply": {"name": _("Mail not replied"),},
-            "mail_click": {"name": _("Mail clicked"),},
-            "mail_not_clicked": {"name": _("Mail not clicked"),},
-            "mail_bounce": {"name": _("Mail bounced"),},
-            "activity_done": {"name": _("Activity has been finished"),},
-            "activity_not_done": {"name": _("Activity has not been finished"),},
+            "start": {
+                "name": _("start of workflow"),
+            },
+            "after_step": {
+                "name": _("execution of another step"),
+            },
+            "mail_open": {
+                "name": _("Mail opened"),
+                "allow_expiry": True,
+                "step_type": ["mail"],
+            },
+            "mail_not_open": {
+                "name": _("Mail not opened"),
+                "step_type": ["mail"],
+            },
+            "mail_reply": {
+                "name": _("Mail replied"),
+                "allow_expiry": True,
+                "step_type": ["mail"],
+            },
+            "mail_not_reply": {
+                "name": _("Mail not replied"),
+                "step_type": ["mail"],
+            },
+            "mail_click": {
+                "name": _("Mail clicked"),
+                "allow_expiry": True,
+                "step_type": ["mail"],
+            },
+            "mail_not_clicked": {
+                "name": _("Mail not clicked"),
+                "step_type": ["mail"],
+            },
+            "mail_bounce": {
+                "name": _("Mail bounced"),
+                "allow_expiry": True,
+                "step_type": ["mail"],
+            },
+            "activity_done": {
+                "name": _("Activity has been finished"),
+                "step_type": ["activity"],
+            },
+            "activity_not_done": {
+                "name": _("Activity has not been finished"),
+                "allow_expiry": True,
+                "step_type": ["activity"],
+            },
         }
+
+    @api.depends("trigger_type")
+    def _compute_allow_expiry(self):
+        trigger_types = self._trigger_types()
+        for record in self:
+            record.allow_expiry = trigger_types[record.trigger_type].get(
+                "allow_expiry", False
+            )
+
+    @api.depends("trigger_type")
+    def _compute_expiry(self):
+        trigger_types = self._trigger_types()
+        for record in self:
+            record.expiry = (
+                trigger_types[record.trigger_type].get("allow_expiry", False)
+                and record.expiry
+            )
 
     def _check_configuration(self):
         if self.parent_id and self.trigger_type == "start":
