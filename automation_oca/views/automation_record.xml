@@ -49,6 +49,7 @@
                             <field name="trigger_type_data" />
                             <field name="step_icon" />
                             <field name="step_name" />
+                            <field name="step_actions" />
                             <templates>
                                 <div
                                     t-name="kanban-box"
@@ -170,59 +171,24 @@
                                         </div>
                                         <div
                                             class="o_automation_kanban_states"
-                                            t-if="record.step_type.raw_value == 'activity' and record.state.raw_value == 'done'"
+                                            t-if="record.step_actions.raw_value.length > 0"
                                         >
-                                            <div
-                                                t-attf-class="o_automation_kanban_state {{ record.activity_done_on.raw_value ? 'text-success': 'text-muted' }}"
-                                            ><i
-                                                    class="fa fa-clock-o"
-                                                    title="Activity done"
-                                                    role="img"
-                                                    aria-label="Activity done"
-                                                /> Activity done</div>
-                                        </div>
-                                        <div
-                                            class="o_automation_kanban_states"
-                                            t-if="record.state.raw_value == 'done'"
-                                        >
-                                            <div
-                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value != 'bounced' ? 'text-success': 'text-muted' }}"
-                                            ><i
-                                                    class="fa fa-envelope"
-                                                    title="Sent"
-                                                    role="img"
-                                                    aria-label="Sent"
-                                                /> Sent</div>
-                                            <div
-                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'open' or record.mail_status.raw_value == 'reply' ? 'text-success' : 'text-muted' }}"
-                                            ><i
-                                                    class="fa fa-envelope-open-o"
-                                                    title="Opened"
-                                                    role="img"
-                                                    aria-label="Opened"
-                                                /> Opened</div>
-                                            <div
-                                                t-attf-class="o_automation_kanban_state {{ record.mail_clicked_on.raw_value ? 'text-success' : 'text-muted' }}"
-                                            ><i
-                                                    class="fa fa-hand-pointer-o"
-                                                    title="Clicked"
-                                                    role="img"
-                                                    aria-label="Clicked"
-                                                /> Clicked</div>
-                                            <div
-                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'reply' ? 'text-success' : 'text-muted' }}"
-                                            ><i
-                                                    class="fa fa-reply"
-                                                    title="Replied"
-                                                    role="img"
-                                                    aria-label="Replied"
-                                                /> Replied</div>
-                                            <div
-                                                t-attf-class="o_automation_kanban_state {{ record.mail_status.raw_value == 'bounced' ? 'text-danger' : 'text-muted' }}"
-                                            ><i
-                                                    class="fa fa-exclamation-circle"
-                                                    title="Bounced"
-                                                /> Bounced</div>
+                                            <t
+                                                t-foreach="record.step_actions.raw_value"
+                                                t-as="state"
+                                                t-key="state_index"
+                                            >
+                                                <div
+                                                    t-attf-class="o_automation_kanban_state {{ state.done ? state.color: 'text-muted' }}"
+                                                >
+                                                    <i
+                                                        t-att-class="state.icon"
+                                                        t-att-title="state.name"
+                                                        role="img"
+                                                        t-att-aria-label="state.name"
+                                                    /> <t t-esc="state.name" />
+                                                </div>
+                                            </t>
                                         </div>
                                     </div>
                                 </div>

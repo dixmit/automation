@@ -14,7 +14,7 @@ class TestAutomationActivity(AutomationTestCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         self.assertFalse(self.partner_01.activity_ids)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertTrue(self.partner_01.activity_ids)
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -23,8 +23,24 @@ class TestAutomationActivity(AutomationTestCase):
             record_activity, self.partner_01.activity_ids.automation_record_step_id
         )
         self.assertFalse(record_activity.activity_done_on)
+        record_activity.invalidate_recordset()
+        self.assertFalse(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-clock-o"
+            ]
+        )
         self.partner_01.activity_ids.action_feedback()
         self.assertTrue(record_activity.activity_done_on)
+        record_activity.invalidate_recordset()
+        self.assertTrue(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-clock-o"
+            ]
+        )
 
     def test_activity_execution_child(self):
         """
@@ -38,7 +54,7 @@ class TestAutomationActivity(AutomationTestCase):
         self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
         )
@@ -66,7 +82,7 @@ class TestAutomationActivity(AutomationTestCase):
         self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
         )
@@ -97,7 +113,7 @@ class TestAutomationActivity(AutomationTestCase):
         self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
         )

@@ -62,7 +62,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.env["automation.configuration"].cron_automation()
         messages_01 = self.partner_01.message_ids
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -83,7 +83,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -103,9 +103,25 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             "bounced_email": "",
             "bounced_msg_id": [record_activity.message_id],
         }
+        record_activity.invalidate_recordset()
+        self.assertFalse(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-exclamation-circle"
+            ]
+        )
         self.env["mail.thread"]._routing_handle_bounce(False, parsed_bounce_values)
         self.assertEqual("bounce", record_activity.mail_status)
         self.assertTrue(record_child_activity.scheduled_date)
+        record_activity.invalidate_recordset()
+        self.assertTrue(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-exclamation-circle"
+            ]
+        )
 
     def test_reply(self):
         """
@@ -118,7 +134,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -129,11 +145,27 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
         self.assertFalse(record_child_activity.scheduled_date)
+        record_activity.invalidate_recordset()
+        self.assertFalse(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-reply"
+            ]
+        )
         self.gateway_mail_reply_wrecord(
             MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
         )
         self.assertEqual("reply", record_activity.mail_status)
         self.assertTrue(record_child_activity.scheduled_date)
+        record_activity.invalidate_recordset()
+        self.assertTrue(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-reply"
+            ]
+        )
 
     def test_no_reply(self):
         """
@@ -148,7 +180,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -166,7 +198,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
         )
         self.assertEqual("reply", record_activity.mail_status)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual("rejected", record_child_activity.state)
 
     def test_open(self):
@@ -180,7 +212,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -191,9 +223,25 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
         self.assertFalse(record_child_activity.scheduled_date)
+        record_activity.invalidate_recordset()
+        self.assertFalse(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-envelope-open-o"
+            ]
+        )
         self.url_open(record_activity._get_mail_tracking_url())
         self.assertEqual("open", record_activity.mail_status)
         self.assertTrue(record_child_activity.scheduled_date)
+        record_activity.invalidate_recordset()
+        self.assertTrue(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-envelope-open-o"
+            ]
+        )
 
     def test_open_wrong_code(self):
         """
@@ -207,7 +255,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -236,7 +284,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -247,7 +295,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
         self.assertTrue(record_child_activity.scheduled_date)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual("done", record_child_activity.state)
 
     def test_no_open_rejected(self):
@@ -262,7 +310,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -275,7 +323,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.assertTrue(record_child_activity.scheduled_date)
         self.url_open(record_activity._get_mail_tracking_url())
         self.assertEqual("open", record_activity.mail_status)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual("rejected", record_child_activity.state)
 
     def test_click(self):
@@ -295,7 +343,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.assertEqual(0, self.configuration.click_count)
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -313,6 +361,14 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.invalidate_recordset()
         self.assertEqual(0, self.configuration.click_count)
         self.assertFalse(record_child_activity.scheduled_date)
+        record_activity.invalidate_recordset()
+        self.assertFalse(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-hand-pointer-o"
+            ]
+        )
         tracker = self.env["link.tracker"].search(
             [("url", "=", "https://www.twitter.com")]
         )
@@ -334,6 +390,14 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
                     ("link_id", "=", tracker.id),
                 ]
             ),
+        )
+        record_activity.invalidate_recordset()
+        self.assertTrue(
+            [
+                step
+                for step in record_activity.step_actions
+                if step["done"] and step["icon"] == "fa fa-hand-pointer-o"
+            ]
         )
         self.assertTrue(record_child_activity.scheduled_date)
         self.configuration.invalidate_recordset()
@@ -372,7 +436,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -421,7 +485,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -435,7 +499,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.url_open(record_activity._get_mail_tracking_url())
         self.assertEqual("open", record_activity.mail_status)
         self.assertTrue(record_child_activity.scheduled_date)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual("done", record_child_activity.state)
 
     def test_no_click_rejected(self):
@@ -450,7 +514,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.step"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_steps()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
         record_activity = self.env["automation.record.step"].search(
             [("configuration_step_id", "=", activity.id)]
@@ -475,7 +539,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
                 record_activity._get_mail_tracking_token(),
             )
         )
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual("rejected", record_child_activity.state)
 
     def test_is_test_behavior(self):

@@ -136,7 +136,7 @@ class TestAutomationBase(AutomationTestCase):
             [("configuration_step_id", "=", activity.id)]
         )
         self.assertFalse(record.error_trace)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual(record.state, "error")
         self.assertTrue(record.error_trace)
 
@@ -168,7 +168,7 @@ class TestAutomationBase(AutomationTestCase):
             [("configuration_step_id", "=", activity.id)]
         )
         self.assertEqual("scheduled", record_activity.state)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual("expired", record_activity.state)
 
     def test_cancel(self):
@@ -185,7 +185,7 @@ class TestAutomationBase(AutomationTestCase):
         self.assertEqual("scheduled", record_activity.state)
         record_activity.cancel()
         self.assertEqual("cancel", record_activity.state)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual("cancel", record_activity.state)
 
     def test_counter(self):
@@ -262,7 +262,7 @@ class TestAutomationBase(AutomationTestCase):
         self.assertEqual(0, child_activity.graph_error)
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["done"]))
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["error"]))
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.configuration.invalidate_recordset()
         self.assertEqual(1, self.configuration.activity_mail_count)
         self.assertEqual(1, self.configuration.activity_action_count)
@@ -286,7 +286,7 @@ class TestAutomationBase(AutomationTestCase):
         self.assertEqual(0, child_activity.graph_error)
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["done"]))
         self.assertEqual(0, sum(d["y"] for d in child_activity.graph_data["error"]))
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.configuration.invalidate_recordset()
         self.assertEqual(1, self.configuration.activity_mail_count)
         self.assertEqual(2, self.configuration.activity_action_count)

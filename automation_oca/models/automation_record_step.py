@@ -7,7 +7,7 @@ from io import StringIO
 import werkzeug.urls
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models, tools
+from odoo import _, api, fields, models, tools
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -68,6 +68,7 @@ class AutomationRecordStep(models.Model):
     mail_opened_on = fields.Datetime(readonly=True)
     activity_done_on = fields.Datetime(readonly=True)
     is_test = fields.Boolean(related="record_id.is_test", store=True)
+    step_actions = fields.Json(compute="_compute_step_actions")
 
     @api.depends("trigger_type")
     def _compute_trigger_type_data(self):
@@ -239,7 +240,7 @@ class AutomationRecordStep(models.Model):
         ).run()
         self._fill_childs()
 
-    def _cron_automation_activities(self):
+    def _cron_automation_steps(self):
         for activity in self.search(
             [
                 ("state", "=", "scheduled"),
@@ -316,3 +317,62 @@ class AutomationRecordStep(models.Model):
             and not r.scheduled_date
             and r.state == "scheduled"
         )._activate()
+
+    @api.depends("state")
+    def _compute_step_actions(self):
+        for record in self:
+            record.step_actions = record._get_step_actions()
+
+    def _get_step_actions(self):
+        """
+        This should return a list of dictionaries that will have the following keys:
+        - icon: Icon to show (fontawesome icon like fa fa-clock-o)
+        - name: name of the action to show (translatable value)
+        - done: if the action succeeded (boolean)
+        - color: Color to show when done (text-success, text-danger...)
+        """
+        if self.step_type == "activity":
+            return [
+                {
+                    "icon": "fa fa-clock-o",
+                    "name": _("Activity Done"),
+                    "done": bool(self.activity_done_on),
+                    "color": "text-success",
+                }
+            ]
+        if self.step_type == "mail":
+            return [
+                {
+                    "icon": "fa fa-envelope",
+                    "name": _("Sent"),
+                    "done": bool(self.mail_status and self.mail_status != "bounced"),
+                    "color": "text-success",
+                },
+                {
+                    "icon": "fa fa-envelope-open-o",
+                    "name": _("Opened"),
+                    "done": bool(
+                        self.mail_status and self.mail_status in ["reply", "open"]
+                    ),
+                    "color": "text-success",
+                },
+                {
+                    "icon": "fa fa-hand-pointer-o",
+                    "name": _("Clicked"),
+                    "done": bool(self.mail_status and self.mail_clicked_on),
+                    "color": "text-success",
+                },
+                {
+                    "icon": "fa fa-reply",
+                    "name": _("Replied"),
+                    "done": bool(self.mail_status and self.mail_status == "reply"),
+                    "color": "text-success",
+                },
+                {
+                    "icon": "fa fa-exclamation-circle",
+                    "name": _("Bounced"),
+                    "done": bool(self.mail_status and self.mail_status == "bounce"),
+                    "color": "text-danger",
+                },
+            ]
+        return []

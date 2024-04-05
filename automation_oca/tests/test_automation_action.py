@@ -15,7 +15,7 @@ class TestAutomationAction(AutomationTestCase):
         self.env["automation.configuration"].cron_automation()
         self.assertTrue(self.partner_01.comment)
         self.assertTrue(self.partner_02.comment)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertFalse(self.partner_01.comment)
         self.assertTrue(self.partner_02.comment)
         record_activity = self.env["automation.record.step"].search(
@@ -26,6 +26,7 @@ class TestAutomationAction(AutomationTestCase):
         self.partner_01.comment = "My comment"
         # We check that the action is not executed again
         record_activity.run()
+        self.assertFalse(record_activity.step_actions)
         self.assertTrue(self.partner_01.comment)
 
     def test_child_execution_filters(self):
@@ -74,7 +75,7 @@ class TestAutomationAction(AutomationTestCase):
         )
         self.assertTrue(self.partner_01.comment)
         self.assertTrue(self.partner_02.comment)
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertFalse(self.partner_01.comment)
         self.assertFalse(self.partner_02.comment)
         self.assertEqual(
@@ -125,7 +126,7 @@ class TestAutomationAction(AutomationTestCase):
                 ]
             ),
         )
-        self.env["automation.record.step"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_steps()
         self.assertEqual(
             1,
             self.env["automation.record.step"].search_count(
