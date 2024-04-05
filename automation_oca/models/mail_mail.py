@@ -13,20 +13,20 @@ class MailMail(models.Model):
 
     _inherit = "mail.mail"
 
-    automation_record_activity_id = fields.Many2one("automation.record.activity")
+    automation_record_step_id = fields.Many2one("automation.record.step")
 
     @api.model_create_multi
     def create(self, values_list):
         records = super().create(values_list)
-        for record in records.filtered("automation_record_activity_id"):
-            record.automation_record_activity_id.message_id = record.message_id
+        for record in records.filtered("automation_record_step_id"):
+            record.automation_record_step_id.message_id = record.message_id
         return records
 
     def _send_prepare_body(self):
         body = super()._send_prepare_body()
-        if self.automation_record_activity_id:
+        if self.automation_record_step_id:
             body = self.env["mail.render.mixin"]._shorten_links(body, {}, blacklist=[])
-            token = self.automation_record_activity_id._get_mail_tracking_token()
+            token = self.automation_record_step_id._get_mail_tracking_token()
             for match in set(re.findall(tools.URL_REGEX, body)):
                 href = match[0]
                 url = match[1]
@@ -37,7 +37,7 @@ class MailMail(models.Model):
                     new_href = href.replace(
                         url,
                         "%s/au/%s/%s"
-                        % (url, str(self.automation_record_activity_id.id), token),
+                        % (url, str(self.automation_record_step_id.id), token),
                     )
                     body = body.replace(
                         markupsafe.Markup(href), markupsafe.Markup(new_href)
@@ -45,7 +45,7 @@ class MailMail(models.Model):
             body = tools.append_content_to_html(
                 body,
                 '<img src="%s"/>'
-                % self.automation_record_activity_id._get_mail_tracking_url(),
+                % self.automation_record_step_id._get_mail_tracking_url(),
                 plaintext=False,
             )
         return body

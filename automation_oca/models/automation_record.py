@@ -35,8 +35,8 @@ class AutomationRecord(models.Model):
         model_field="model",
         copy=False,
     )
-    automation_activity_ids = fields.One2many(
-        "automation.record.activity", inverse_name="record_id", readonly=True
+    automation_step_ids = fields.One2many(
+        "automation.record.step", inverse_name="record_id", readonly=True
     )
     is_test = fields.Boolean()
 
@@ -49,14 +49,12 @@ class AutomationRecord(models.Model):
             .search([("is_mail_thread", "=", True)])
         ]
 
-    @api.depends("automation_activity_ids.state")
+    @api.depends("automation_step_ids.state")
     def _compute_state(self):
         for record in self:
             record.state = (
                 "run"
-                if record.automation_activity_ids.filtered(
-                    lambda r: r.state == "scheduled"
-                )
+                if record.automation_step_ids.filtered(lambda r: r.state == "scheduled")
                 else "done"
             )
 

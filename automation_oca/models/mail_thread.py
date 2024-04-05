@@ -16,7 +16,7 @@ class MailThread(models.AbstractModel):
         )
         bounced_msg_id = message_dict.get("bounced_msg_id")
         if bounced_msg_id:
-            self.env["automation.record.activity"].search(
+            self.env["automation.record.step"].search(
                 [("message_id", "in", bounced_msg_id)]
             )._set_mail_bounced()
         return result
@@ -25,14 +25,14 @@ class MailThread(models.AbstractModel):
     def _message_route_process(self, message, message_dict, routes):
         """Override to update the parent mailing traces. The parent is found
         by using the References header of the incoming message and looking for
-        matching message_id in automation.record.activity."""
+        matching message_id in automation.record.step."""
         if routes:
             thread_references = (
                 message_dict["references"] or message_dict["in_reply_to"]
             )
             msg_references = tools.mail_header_msgid_re.findall(thread_references)
             if msg_references:
-                records = self.env["automation.record.activity"].search(
+                records = self.env["automation.record.step"].search(
                     [("message_id", "in", msg_references)]
                 )
                 records._set_mail_open()

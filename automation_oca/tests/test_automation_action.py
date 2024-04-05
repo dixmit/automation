@@ -15,11 +15,11 @@ class TestAutomationAction(AutomationTestCase):
         self.env["automation.configuration"].cron_automation()
         self.assertTrue(self.partner_01.comment)
         self.assertTrue(self.partner_02.comment)
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertFalse(self.partner_01.comment)
         self.assertTrue(self.partner_02.comment)
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
         self.assertEqual(1, len(record_activity))
         self.assertEqual("done", record_activity.state)
@@ -57,10 +57,10 @@ class TestAutomationAction(AutomationTestCase):
         self.env["automation.configuration"].cron_automation()
         self.assertEqual(
             0,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
                     (
-                        "configuration_activity_id",
+                        "configuration_step_id",
                         "in",
                         (
                             activity_1_1
@@ -74,63 +74,63 @@ class TestAutomationAction(AutomationTestCase):
         )
         self.assertTrue(self.partner_01.comment)
         self.assertTrue(self.partner_02.comment)
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertFalse(self.partner_01.comment)
         self.assertFalse(self.partner_02.comment)
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_1.id),
+                    ("configuration_step_id", "=", activity_1_1.id),
                     ("record_id.res_id", "=", self.partner_01.id),
                 ]
             ),
         )
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_2.id),
+                    ("configuration_step_id", "=", activity_1_2.id),
                     ("record_id.res_id", "=", self.partner_01.id),
                 ]
             ),
         )
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_1.id),
+                    ("configuration_step_id", "=", activity_1_1.id),
                     ("record_id.res_id", "=", self.partner_02.id),
                 ]
             ),
         )
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_2.id),
+                    ("configuration_step_id", "=", activity_1_2.id),
                     ("record_id.res_id", "=", self.partner_02.id),
                 ]
             ),
         )
         self.assertEqual(
             0,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
                     (
-                        "configuration_activity_id",
+                        "configuration_step_id",
                         "in",
                         (activity_1_1_1 | activity_1_2_1).ids,
                     )
                 ]
             ),
         )
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_1.id),
+                    ("configuration_step_id", "=", activity_1_1.id),
                     ("record_id.res_id", "=", self.partner_01.id),
                     ("state", "=", "done"),
                 ]
@@ -138,9 +138,9 @@ class TestAutomationAction(AutomationTestCase):
         )
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_2.id),
+                    ("configuration_step_id", "=", activity_1_2.id),
                     ("record_id.res_id", "=", self.partner_01.id),
                     ("state", "=", "rejected"),
                 ]
@@ -148,9 +148,9 @@ class TestAutomationAction(AutomationTestCase):
         )
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_1.id),
+                    ("configuration_step_id", "=", activity_1_1.id),
                     ("record_id.res_id", "=", self.partner_02.id),
                     ("state", "=", "rejected"),
                 ]
@@ -158,9 +158,9 @@ class TestAutomationAction(AutomationTestCase):
         )
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_2.id),
+                    ("configuration_step_id", "=", activity_1_2.id),
                     ("record_id.res_id", "=", self.partner_02.id),
                     ("state", "=", "done"),
                 ]
@@ -168,36 +168,36 @@ class TestAutomationAction(AutomationTestCase):
         )
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_1_1.id),
+                    ("configuration_step_id", "=", activity_1_1_1.id),
                     ("record_id.res_id", "=", self.partner_01.id),
                 ]
             ),
         )
         self.assertEqual(
             0,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_2_1.id),
+                    ("configuration_step_id", "=", activity_1_2_1.id),
                     ("record_id.res_id", "=", self.partner_01.id),
                 ]
             ),
         )
         self.assertEqual(
             0,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_1_1.id),
+                    ("configuration_step_id", "=", activity_1_1_1.id),
                     ("record_id.res_id", "=", self.partner_02.id),
                 ]
             ),
         )
         self.assertEqual(
             1,
-            self.env["automation.record.activity"].search_count(
+            self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", activity_1_2_1.id),
+                    ("configuration_step_id", "=", activity_1_2_1.id),
                     ("record_id.res_id", "=", self.partner_02.id),
                 ]
             ),

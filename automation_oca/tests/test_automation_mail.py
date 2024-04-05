@@ -62,10 +62,10 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.env["automation.configuration"].cron_automation()
         messages_01 = self.partner_01.message_ids
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
         self.assertEqual(1, len(record_activity))
         self.assertEqual("done", record_activity.state)
@@ -83,13 +83,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
@@ -118,13 +118,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
@@ -148,13 +148,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
@@ -166,7 +166,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             MAIL_TEMPLATE, self.partner_01, use_in_reply_to=True
         )
         self.assertEqual("reply", record_activity.mail_status)
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertEqual("rejected", record_child_activity.state)
 
     def test_open(self):
@@ -180,13 +180,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
@@ -207,13 +207,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
@@ -236,18 +236,18 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
         self.assertTrue(record_child_activity.scheduled_date)
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertEqual("done", record_child_activity.state)
 
     def test_no_open_rejected(self):
@@ -262,20 +262,20 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
         self.assertTrue(record_child_activity.scheduled_date)
         self.url_open(record_activity._get_mail_tracking_url())
         self.assertEqual("open", record_activity.mail_status)
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertEqual("rejected", record_child_activity.state)
 
     def test_click(self):
@@ -295,13 +295,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.assertEqual(0, self.configuration.click_count)
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.configuration.invalidate_recordset()
@@ -330,7 +330,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             1,
             self.env["link.tracker.click"].search_count(
                 [
-                    ("automation_record_activity_id", "=", record_activity.id),
+                    ("automation_record_step_id", "=", record_activity.id),
                     ("link_id", "=", tracker.id),
                 ]
             ),
@@ -351,7 +351,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
             1,
             self.env["link.tracker.click"].search_count(
                 [
-                    ("automation_record_activity_id", "=", record_activity.id),
+                    ("automation_record_step_id", "=", record_activity.id),
                     ("link_id", "=", tracker.id),
                 ]
             ),
@@ -372,13 +372,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
@@ -421,13 +421,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
@@ -435,7 +435,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.url_open(record_activity._get_mail_tracking_url())
         self.assertEqual("open", record_activity.mail_status)
         self.assertTrue(record_child_activity.scheduled_date)
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertEqual("done", record_child_activity.state)
 
     def test_no_click_rejected(self):
@@ -450,13 +450,13 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         with self.mock_mail_gateway():
-            self.env["automation.record.activity"]._cron_automation_activities()
+            self.env["automation.record.step"]._cron_automation_activities()
             self.assertSentEmail(self.env.user.partner_id, [self.partner_01])
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual("sent", record_activity.mail_status)
         self.assertTrue(record_child_activity)
@@ -475,7 +475,7 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
                 record_activity._get_mail_tracking_token(),
             )
         )
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertEqual("rejected", record_child_activity.state)
 
     def test_is_test_behavior(self):
@@ -496,9 +496,9 @@ class TestAutomationMail(AutomationTestCase, MockEmail, HttpCase):
         wizard_action = wizard.test_record()
         record = self.env[wizard_action["res_model"]].browse(wizard_action["res_id"])
         self.assertTrue(record)
-        self.assertEqual("scheduled", record.automation_activity_ids.state)
-        self.assertFalse(record.automation_activity_ids.mail_status)
+        self.assertEqual("scheduled", record.automation_step_ids.state)
+        self.assertFalse(record.automation_step_ids.mail_status)
         with self.mock_mail_gateway():
-            record.automation_activity_ids.run()
+            record.automation_step_ids.run()
             self.assertNotSentEmail()
-        self.assertEqual("sent", record.automation_activity_ids.mail_status)
+        self.assertEqual("sent", record.automation_step_ids.mail_status)

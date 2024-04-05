@@ -44,11 +44,11 @@ class AutomationConfiguration(models.Model):
         required=True,
         group_expand="_group_expand_states",
     )
-    automation_activity_ids = fields.One2many(
-        "automation.configuration.activity", inverse_name="configuration_id"
+    automation_step_ids = fields.One2many(
+        "automation.configuration.step", inverse_name="configuration_id"
     )
-    automation_direct_activity_ids = fields.One2many(
-        "automation.configuration.activity",
+    automation_direct_step_ids = fields.One2many(
+        "automation.configuration.step",
         inverse_name="configuration_id",
         domain=[("parent_id", "=", False)],
     )
@@ -81,19 +81,19 @@ class AutomationConfiguration(models.Model):
 
     @api.depends()
     def _compute_activity_count(self):
-        data = self.env["automation.record.activity"].read_group(
+        data = self.env["automation.record.step"].read_group(
             [
                 ("configuration_id", "in", self.ids),
                 ("state", "=", "done"),
                 ("is_test", "=", False),
             ],
             [],
-            ["configuration_id", "activity_type"],
+            ["configuration_id", "step_type"],
             lazy=False,
         )
         mapped_data = defaultdict(lambda: {})
         for d in data:
-            mapped_data[d["configuration_id"][0]][d["activity_type"]] = d["__count"]
+            mapped_data[d["configuration_id"][0]][d["step_type"]] = d["__count"]
         for record in self:
             record.activity_mail_count = mapped_data[record.id].get("mail", 0)
             record.activity_action_count = mapped_data[record.id].get("action", 0)
@@ -142,7 +142,7 @@ class AutomationConfiguration(models.Model):
         self.editable_domain = []
         self.filter_id = False
         self.field_id = False
-        self.automation_activity_ids = [(5, 0, 0)]
+        self.automation_step_ids = [(5, 0, 0)]
 
     def start_automation(self):
         self.ensure_one()
@@ -243,9 +243,9 @@ class AutomationConfiguration(models.Model):
             "res_id": record.id,
             "model": record._name,
             "configuration_id": self.id,
-            "automation_activity_ids": [
+            "automation_step_ids": [
                 (0, 0, activity._create_record_activity_vals(record))
-                for activity in self.automation_direct_activity_ids
+                for activity in self.automation_direct_step_ids
             ],
         }
 

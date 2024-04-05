@@ -137,15 +137,15 @@
                         <field name="company_id" groups="base.group_multi_company" />
                     </group>
                     <field
-                        name="automation_activity_ids"
-                        widget="automation_activity"
+                        name="automation_step_ids"
+                        widget="automation_step"
                         mode="kanban"
                         class="o_automation_kanban"
                     >
                         <kanban>
                             <field name="id" />
                             <field name="name" />
-                            <field name="activity_type" />
+                            <field name="step_type" />
                             <field name="parent_id" />
                             <field name="trigger_type" />
                             <field name="parent_position" />
@@ -252,21 +252,21 @@
                                             >
                                                 <span
                                                     class="fa fa-envelope"
-                                                    t-if="record.activity_type.raw_value == 'mail'"
+                                                    t-if="record.step_type.raw_value == 'mail'"
                                                     title="Email"
                                                     role="img"
                                                     aria-label="Email"
                                                 />
                                                 <span
                                                     class="fa fa-clock-o"
-                                                    t-if="record.activity_type.raw_value == 'activity'"
+                                                    t-if="record.step_type.raw_value == 'activity'"
                                                     title="Activity"
                                                     role="img"
                                                     aria-label="Activity"
                                                 />
                                                 <span
                                                     class="fa fa-cogs"
-                                                    t-if="record.activity_type.raw_value == 'action'"
+                                                    t-if="record.step_type.raw_value == 'action'"
                                                     title="Action"
                                                     role="img"
                                                     aria-label="Action"
@@ -280,9 +280,7 @@
                                                         class="oe_kanban_action oe_kanban_action_a"
                                                         t-att-title="record.name.raw_value"
                                                     ><field name="name" /></a></h3>
-                                                <div
-                                                    t-esc="record.activity_type.value"
-                                                />
+                                                <div t-esc="record.step_type.value" />
                                             </div>
                                             <div
                                                 class="o_automation_kanban_header_actions"
@@ -355,7 +353,7 @@
                                                     />
                                                 </div>
                                                 <div
-                                                    t-if="record.activity_type.raw_value == 'activity'"
+                                                    t-if="record.step_type.raw_value == 'activity'"
                                                     trigger-type="activity_done"
                                                     class="text-success o_automation_kanban_child_add_button"
                                                 >
@@ -367,7 +365,7 @@
                                                     />
                                                 </div>
                                                 <div
-                                                    t-if="record.activity_type.raw_value == 'activity'"
+                                                    t-if="record.step_type.raw_value == 'activity'"
                                                     trigger-type="activity_not_done"
                                                     class="text-danger o_automation_kanban_child_add_button"
                                                 >

@@ -50,4 +50,4 @@ AutomationActivity.components = {
     KanbanRenderer: AutomationKanbanRenderer,
 };
 
-registry.category("fields").add("automation_activity", AutomationActivity);
+registry.category("fields").add("automation_step", AutomationActivity);

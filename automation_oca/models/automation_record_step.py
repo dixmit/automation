@@ -11,32 +11,30 @@ from odoo import api, fields, models, tools
 from odoo.tools.safe_eval import safe_eval
 
 
-class AutomationRecordActivity(models.Model):
-    _name = "automation.record.activity"
+class AutomationRecordStep(models.Model):
+    _name = "automation.record.step"
     _description = "Activities done on the record"
     _order = "scheduled_date ASC"
 
-    name = fields.Char(related="configuration_activity_id.name")
+    name = fields.Char(related="configuration_step_id.name")
     record_id = fields.Many2one("automation.record", required=True, ondelete="cascade")
-    configuration_activity_id = fields.Many2one(
-        "automation.configuration.activity", required=True
+    configuration_step_id = fields.Many2one(
+        "automation.configuration.step", required=True
     )
     configuration_id = fields.Many2one(
-        related="configuration_activity_id.configuration_id",
+        related="configuration_step_id.configuration_id",
         store=True,
     )
-    activity_type = fields.Selection(
-        related="configuration_activity_id.activity_type", store=True
-    )
+    step_type = fields.Selection(related="configuration_step_id.step_type", store=True)
     is_mail_activity = fields.Boolean(
-        related="configuration_activity_id.is_mail_activity", store=True
+        related="configuration_step_id.is_mail_activity", store=True
     )
     scheduled_date = fields.Datetime(readonly=True)
     expiry_date = fields.Datetime(readonly=True)
     processed_on = fields.Datetime(readonly=True)
-    parent_id = fields.Many2one("automation.record.activity", readonly=True)
-    child_ids = fields.One2many("automation.record.activity", inverse_name="parent_id")
-    trigger_type = fields.Selection(related="configuration_activity_id.trigger_type")
+    parent_id = fields.Many2one("automation.record.step", readonly=True)
+    child_ids = fields.One2many("automation.record.step", inverse_name="parent_id")
+    trigger_type = fields.Selection(related="configuration_step_id.trigger_type")
     state = fields.Selection(
         [
             ("scheduled", "Scheduled"),
@@ -80,22 +78,22 @@ class AutomationRecordActivity(models.Model):
 
     def _check_to_execute(self):
         if (
-            self.configuration_activity_id.trigger_type == "mail_not_open"
+            self.configuration_step_id.trigger_type == "mail_not_open"
             and self.parent_id.mail_status in ["open", "reply"]
         ):
             return False
         if (
-            self.configuration_activity_id.trigger_type == "mail_not_reply"
+            self.configuration_step_id.trigger_type == "mail_not_reply"
             and self.parent_id.mail_status == "reply"
         ):
             return False
         if (
-            self.configuration_activity_id.trigger_type == "mail_not_clicked"
+            self.configuration_step_id.trigger_type == "mail_not_clicked"
             and self.parent_id.mail_clicked_on
         ):
             return False
         if (
-            self.configuration_activity_id.trigger_type == "activity_not_done"
+            self.configuration_step_id.trigger_type == "activity_not_done"
             and self.parent_id.activity_done_on
         ):
             return False
@@ -108,14 +106,14 @@ class AutomationRecordActivity(models.Model):
         if (
             self.record_id.resource_ref is None
             or not self.record_id.resource_ref.filtered_domain(
-                safe_eval(self.configuration_activity_id.applied_domain)
+                safe_eval(self.configuration_step_id.applied_domain)
             )
             or not self._check_to_execute()
         ):
             self.write({"state": "rejected", "processed_on": fields.Datetime.now()})
             return
         try:
-            getattr(self, "_run_%s" % self.configuration_activity_id.activity_type)()
+            getattr(self, "_run_%s" % self.configuration_step_id.step_type)()
             self.write({"state": "done", "processed_on": fields.Datetime.now()})
         except Exception:
             buff = StringIO()
@@ -132,7 +130,7 @@ class AutomationRecordActivity(models.Model):
     def _fill_childs(self, **kwargs):
         self.record_id.write(
             {
-                "automation_activity_ids": [
+                "automation_step_ids": [
                     (
                         0,
                         0,
@@ -140,7 +138,7 @@ class AutomationRecordActivity(models.Model):
                             self.record_id.resource_ref, parent_id=self.id, **kwargs
                         ),
                     )
-                    for activity in self.configuration_activity_id.child_ids
+                    for activity in self.configuration_step_id.child_ids
                 ]
             }
         )
@@ -149,39 +147,35 @@ class AutomationRecordActivity(models.Model):
         record = self.env[self.record_id.model].browse(self.record_id.res_id)
 
         vals = {
-            "summary": self.configuration_activity_id.activity_summary or "",
-            "note": self.configuration_activity_id.activity_note or "",
-            "activity_type_id": self.configuration_activity_id.activity_type_id.id,
-            "automation_record_activity_id": self.id,
+            "summary": self.configuration_step_id.activity_summary or "",
+            "note": self.configuration_step_id.activity_note or "",
+            "activity_type_id": self.configuration_step_id.activity_type_id.id,
+            "automation_record_step_id": self.id,
         }
-        if self.configuration_activity_id.activity_date_deadline_range > 0:
-            range_type = (
-                self.configuration_activity_id.activity_date_deadline_range_type
-            )
+        if self.configuration_step_id.activity_date_deadline_range > 0:
+            range_type = self.configuration_step_id.activity_date_deadline_range_type
             vals["date_deadline"] = fields.Date.context_today(self) + relativedelta(
-                **{
-                    range_type: self.configuration_activity_id.activity_date_deadline_range
-                }
+                **{range_type: self.configuration_step_id.activity_date_deadline_range}
             )
         user = False
-        if self.configuration_activity_id.activity_user_type == "specific":
+        if self.configuration_step_id.activity_user_type == "specific":
             user = self.activity_user_id
-        elif self.configuration_activity_id.activity_user_type == "generic":
-            user = record[self.configuration_activity_id.activity_user_field_id.name]
+        elif self.configuration_step_id.activity_user_type == "generic":
+            user = record[self.configuration_step_id.activity_user_field_id.name]
         if user:
             vals["user_id"] = user.id
         record.activity_schedule(**vals)
         self._fill_childs()
 
     def _run_mail(self):
-        author_id = self.configuration_activity_id.mail_author_id.id
+        author_id = self.configuration_step_id.mail_author_id.id
         composer_values = {
             "author_id": author_id,
             "record_name": False,
             "model": self.record_id.model,
             "composition_mode": "mass_mail",
-            "template_id": self.configuration_activity_id.mail_template_id.id,
-            "automation_record_activity_id": self.id,
+            "template_id": self.configuration_step_id.mail_template_id.id,
+            "automation_record_step_id": self.id,
         }
         res_ids = [self.record_id.res_id]
         composer = (
@@ -191,7 +185,7 @@ class AutomationRecordActivity(models.Model):
         )
         composer.write(
             composer._onchange_template_id(
-                self.configuration_activity_id.mail_template_id.id,
+                self.configuration_step_id.mail_template_id.id,
                 "mass_mail",
                 self.record_id.model,
                 self.record_id.res_id,
@@ -223,7 +217,7 @@ class AutomationRecordActivity(models.Model):
         return {}
 
     def _run_action(self):
-        self.configuration_activity_id.server_action_id.with_context(
+        self.configuration_step_id.server_action_id.with_context(
             active_model=self.record_id.model,
             active_ids=[self.record_id.res_id],
         ).run()
@@ -255,7 +249,7 @@ class AutomationRecordActivity(models.Model):
 
     def _activate(self):
         for record in self.filtered(lambda r: not r.scheduled_date):
-            config = record.configuration_activity_id
+            config = record.configuration_step_id
             record.scheduled_date = fields.Datetime.now() + relativedelta(
                 **{config.trigger_interval_type: config.trigger_interval}
             )

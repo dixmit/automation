@@ -50,12 +50,12 @@ class AutomationTestCase(TransactionCase):
 
     @classmethod
     def create_server_action(cls, parent_id=False, **kwargs):
-        return cls.env["automation.configuration.activity"].create(
+        return cls.env["automation.configuration.step"].create(
             {
                 "name": "Demo activity",
                 "parent_id": parent_id,
                 "configuration_id": cls.configuration.id,
-                "activity_type": "action",
+                "step_type": "action",
                 "server_action_id": cls.action.id,
                 "trigger_type": "activity" if parent_id else "start",
                 **kwargs,
@@ -64,12 +64,12 @@ class AutomationTestCase(TransactionCase):
 
     @classmethod
     def create_activity_action(cls, parent_id=False, **kwargs):
-        return cls.env["automation.configuration.activity"].create(
+        return cls.env["automation.configuration.step"].create(
             {
                 "name": "Demo activity",
                 "parent_id": parent_id,
                 "configuration_id": cls.configuration.id,
-                "activity_type": "activity",
+                "step_type": "activity",
                 "activity_type_id": cls.activity_type.id,
                 "trigger_type": "activity" if parent_id else "start",
                 **kwargs,
@@ -78,12 +78,12 @@ class AutomationTestCase(TransactionCase):
 
     @classmethod
     def create_mail_activity(cls, parent_id=False, trigger_type=False, **kwargs):
-        return cls.env["automation.configuration.activity"].create(
+        return cls.env["automation.configuration.step"].create(
             {
                 "name": "Demo activity",
                 "parent_id": parent_id,
                 "configuration_id": cls.configuration.id,
-                "activity_type": "mail",
+                "step_type": "mail",
                 "mail_template_id": cls.template.id,
                 "trigger_type": trigger_type or ("activity" if parent_id else "start"),
                 **kwargs,

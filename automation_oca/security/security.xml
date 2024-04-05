@@ -21,9 +21,9 @@
                 name="domain_force"
             >['|', ('company_id', 'in', company_ids), ('company_id', '=', False)]</field>
         </record>
-        <record id="automation_configuration_activity_rule" model="ir.rule">
+        <record id="automation_configuration_step_rule" model="ir.rule">
             <field name="name">Automation Configuration Company Activity rule</field>
-            <field name="model_id" ref="model_automation_configuration_activity" />
+            <field name="model_id" ref="model_automation_configuration_step" />
             <field name="global" eval="True" />
             <field
                 name="domain_force"

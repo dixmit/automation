@@ -28,7 +28,7 @@ class AutomationOCAController(http.Controller):
             token,
             tools.hmac(request.env(su=True), "automation_oca", record_id),
         ):
-            request.env["automation.record.activity"].sudo().browse(
+            request.env["automation.record.step"].sudo().browse(
                 record_id
             )._set_mail_open()
         response = Response()
@@ -47,17 +47,17 @@ class AutomationOCAController(http.Controller):
         # don't assume geoip is set, it is part of the website module
         # which mass_mailing doesn't depend on
         country_code = request.geoip.get("country_code")
-        automation_record_activity_id = False
+        automation_record_step_id = False
         if consteq(
             token,
             tools.hmac(request.env(su=True), "automation_oca", record_id),
         ):
-            automation_record_activity_id = record_id
+            automation_record_step_id = record_id
         request.env["link.tracker.click"].sudo().add_click(
             code,
             ip=request.httprequest.remote_addr,
             country_code=country_code,
-            automation_record_activity_id=automation_record_activity_id,
+            automation_record_step_id=automation_record_step_id,
         )
         redirect_url = request.env["link.tracker"].get_url_from_code(code)
         if not redirect_url:

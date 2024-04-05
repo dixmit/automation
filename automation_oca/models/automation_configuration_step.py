@@ -13,10 +13,10 @@ from odoo.tools import get_lang
 from odoo.tools.safe_eval import safe_eval
 
 
-class AutomationConfigurationActivity(models.Model):
+class AutomationConfigurationStep(models.Model):
 
-    _name = "automation.configuration.activity"
-    _description = "Automation Activity"
+    _name = "automation.configuration.step"
+    _description = "Automation Steps"
     _order = "trigger_interval_hours ASC"
 
     name = fields.Char(required=True)
@@ -30,13 +30,13 @@ class AutomationConfigurationActivity(models.Model):
         compute="_compute_applied_domain",
         recursive=True,
     )
-    parent_id = fields.Many2one("automation.configuration.activity", ondelete="cascade")
+    parent_id = fields.Many2one("automation.configuration.step", ondelete="cascade")
     model_id = fields.Many2one(related="configuration_id.model_id")
     model = fields.Char(related="model_id.model")
     child_ids = fields.One2many(
-        "automation.configuration.activity", inverse_name="parent_id"
+        "automation.configuration.step", inverse_name="parent_id"
     )
-    activity_type = fields.Selection(
+    step_type = fields.Selection(
         [("mail", "Mail"), ("action", "Server Action"), ("activity", "Activity")],
         required=True,
         default="mail",
@@ -139,11 +139,11 @@ class AutomationConfigurationActivity(models.Model):
     graph_error = fields.Integer(compute="_compute_total_graph_data")
     is_mail_activity = fields.Boolean(compute="_compute_is_mail_activity", store=True)
 
-    @api.depends("activity_type")
+    @api.depends("step_type")
     def _compute_is_mail_activity(self):
         mail_activities = self._get_mail_activities()
         for record in self:
-            record.is_mail_activity = record.activity_type in mail_activities
+            record.is_mail_activity = record.step_type in mail_activities
 
     @api.model
     def _get_mail_activities(self):
@@ -160,9 +160,9 @@ class AutomationConfigurationActivity(models.Model):
 
     @api.depends()
     def _compute_graph_data(self):
-        total = self.env["automation.record.activity"].read_group(
+        total = self.env["automation.record.step"].read_group(
             [
-                ("configuration_activity_id", "in", self.ids),
+                ("configuration_step_id", "in", self.ids),
                 (
                     "processed_on",
                     ">=",
@@ -170,13 +170,13 @@ class AutomationConfigurationActivity(models.Model):
                 ),
                 ("is_test", "=", False),
             ],
-            ["configuration_activity_id"],
-            ["configuration_activity_id", "processed_on:day"],
+            ["configuration_step_id"],
+            ["configuration_step_id", "processed_on:day"],
             lazy=False,
         )
-        done = self.env["automation.record.activity"].read_group(
+        done = self.env["automation.record.step"].read_group(
             [
-                ("configuration_activity_id", "in", self.ids),
+                ("configuration_step_id", "in", self.ids),
                 (
                     "processed_on",
                     ">=",
@@ -185,8 +185,8 @@ class AutomationConfigurationActivity(models.Model):
                 ("state", "=", "done"),
                 ("is_test", "=", False),
             ],
-            ["configuration_activity_id"],
-            ["configuration_activity_id", "processed_on:day"],
+            ["configuration_step_id"],
+            ["configuration_step_id", "processed_on:day"],
             lazy=False,
         )
         now = fields.Datetime.now()
@@ -203,14 +203,14 @@ class AutomationConfigurationActivity(models.Model):
             lambda: {"done": date_map.copy(), "error": date_map.copy()}
         )
         for line in total:
-            result[line["configuration_activity_id"][0]]["error"][
+            result[line["configuration_step_id"][0]]["error"][
                 line["processed_on:day"]
             ] += line["__count"]
         for line in done:
-            result[line["configuration_activity_id"][0]]["done"][
+            result[line["configuration_step_id"][0]]["done"][
                 line["processed_on:day"]
             ] += line["__count"]
-            result[line["configuration_activity_id"][0]]["error"][
+            result[line["configuration_step_id"][0]]["error"][
                 line["processed_on:day"]
             ] -= line["__count"]
         for record in self:
@@ -229,24 +229,24 @@ class AutomationConfigurationActivity(models.Model):
     @api.depends()
     def _compute_total_graph_data(self):
         for record in self:
-            record.graph_done = self.env["automation.record.activity"].search_count(
+            record.graph_done = self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", record.id),
+                    ("configuration_step_id", "=", record.id),
                     ("state", "=", "done"),
                     ("is_test", "=", False),
                 ]
             )
-            record.graph_error = self.env["automation.record.activity"].search_count(
+            record.graph_error = self.env["automation.record.step"].search_count(
                 [
-                    ("configuration_activity_id", "=", record.id),
+                    ("configuration_step_id", "=", record.id),
                     ("state", "in", ["expired", "rejected", "error", "cancel"]),
                     ("is_test", "=", False),
                 ]
             )
 
-    @api.depends("activity_type")
+    @api.depends("step_type")
     def _compute_activity_info(self):
-        for to_reset in self.filtered(lambda act: act.activity_type != "activity"):
+        for to_reset in self.filtered(lambda act: act.step_type != "activity"):
             to_reset.activity_summary = False
             to_reset.activity_note = False
             to_reset.activity_date_deadline_range = False
@@ -254,7 +254,7 @@ class AutomationConfigurationActivity(models.Model):
             to_reset.activity_user_type = False
             to_reset.activity_user_id = False
             to_reset.activity_user_field_id = False
-        for activity in self.filtered(lambda act: act.activity_type == "activity"):
+        for activity in self.filtered(lambda act: act.step_type == "activity"):
             if not activity.activity_date_deadline_range_type:
                 activity.activity_date_deadline_range_type = "days"
             if not activity.activity_user_id:
@@ -292,6 +292,22 @@ class AutomationConfigurationActivity(models.Model):
                 ]
             )
 
+    @api.model
+    def _trigger_types(self):
+        return {
+            "start": {"name": _("start of workflow"),},
+            "activity": {"name": _("execution of another activity"),},
+            "mail_open": {"name": _("Mail opened"),},
+            "mail_not_open": {"name": _("Mail not opened"),},
+            "mail_reply": {"name": _("Mail replied"),},
+            "mail_not_reply": {"name": _("Mail not replied"),},
+            "mail_click": {"name": _("Mail clicked"),},
+            "mail_not_clicked": {"name": _("Mail not clicked"),},
+            "mail_bounce": {"name": _("Mail bounced"),},
+            "activity_done": {"name": _("Activity has been finished"),},
+            "activity_not_done": {"name": _("Activity has not been finished"),},
+        }
+
     def _check_configuration(self):
         if self.parent_id and self.trigger_type == "start":
             raise ValidationError(_("Start configurations cannot have a parent"))
@@ -314,7 +330,7 @@ class AutomationConfigurationActivity(models.Model):
                 _("Configurations triggered from mail must come from a mail activity")
             )
 
-    @api.constrains("parent_id", "parent_id.activity_type", "trigger_type")
+    @api.constrains("parent_id", "parent_id.step_type", "trigger_type")
     def _check_parent_configuration(self):
         for record in self:
             record._check_configuration()
@@ -343,7 +359,7 @@ class AutomationConfigurationActivity(models.Model):
 
     def _create_record_activity_vals(self, record, **kwargs):
         return {
-            "configuration_activity_id": self.id,
+            "configuration_step_id": self.id,
             "expiry_date": self._get_expiry_date(),
             "scheduled_date": self._get_record_activity_scheduled_date(),
             **kwargs,

@@ -14,13 +14,13 @@ class TestAutomationActivity(AutomationTestCase):
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         self.assertFalse(self.partner_01.activity_ids)
-        self.env["automation.record.activity"]._cron_automation_activities()
+        self.env["automation.record.step"]._cron_automation_activities()
         self.assertTrue(self.partner_01.activity_ids)
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
         self.assertEqual(
-            record_activity, self.partner_01.activity_ids.automation_record_activity_id
+            record_activity, self.partner_01.activity_ids.automation_record_step_id
         )
         self.assertFalse(record_activity.activity_done_on)
         self.partner_01.activity_ids.action_feedback()
@@ -38,15 +38,15 @@ class TestAutomationActivity(AutomationTestCase):
         self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
-        self.env["automation.record.activity"]._cron_automation_activities()
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        self.env["automation.record.step"]._cron_automation_activities()
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual(
-            record_activity, self.partner_01.activity_ids.automation_record_activity_id
+            record_activity, self.partner_01.activity_ids.automation_record_step_id
         )
         self.assertFalse(record_activity.activity_done_on)
         self.assertFalse(record_child_activity.scheduled_date)
@@ -66,15 +66,15 @@ class TestAutomationActivity(AutomationTestCase):
         self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
-        self.env["automation.record.activity"]._cron_automation_activities()
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        self.env["automation.record.step"]._cron_automation_activities()
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual(
-            record_activity, self.partner_01.activity_ids.automation_record_activity_id
+            record_activity, self.partner_01.activity_ids.automation_record_step_id
         )
         self.assertFalse(record_activity.activity_done_on)
         self.assertTrue(record_child_activity.scheduled_date)
@@ -97,15 +97,15 @@ class TestAutomationActivity(AutomationTestCase):
         self.configuration.editable_domain = "[('id', '=', %s)]" % self.partner_01.id
         self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
-        self.env["automation.record.activity"]._cron_automation_activities()
-        record_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", activity.id)]
+        self.env["automation.record.step"]._cron_automation_activities()
+        record_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", activity.id)]
         )
-        record_child_activity = self.env["automation.record.activity"].search(
-            [("configuration_activity_id", "=", child_activity.id)]
+        record_child_activity = self.env["automation.record.step"].search(
+            [("configuration_step_id", "=", child_activity.id)]
         )
         self.assertEqual(
-            record_activity, self.partner_01.activity_ids.automation_record_activity_id
+            record_activity, self.partner_01.activity_ids.automation_record_step_id
         )
         self.assertFalse(record_activity.activity_done_on)
         self.assertTrue(record_child_activity.scheduled_date)

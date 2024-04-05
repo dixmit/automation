@@ -3,8 +3,8 @@
      License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
 <odoo>
 
-    <record model="ir.ui.view" id="automation_configuration_activity_form_view">
-        <field name="model">automation.configuration.activity</field>
+    <record model="ir.ui.view" id="automation_configuration_step_form_view">
+        <field name="model">automation.configuration.step</field>
         <field name="arch" type="xml">
             <form>
                 <header />
@@ -17,7 +17,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="activity_type" />
+                            <field name="step_type" />
                             <field name="configuration_id" invisible="1" />
                             <field name="model_id" invisible="1" />
                             <field name="model" invisible="1" />
@@ -78,28 +78,24 @@
                                 </div>
                             </div>
                         </group>
-                        <group
-                            attrs="{'invisible':[('activity_type', '!=', 'action')]}"
-                        >
+                        <group attrs="{'invisible':[('step_type', '!=', 'action')]}">
                             <field
                                 name="server_action_id"
                                 context="{'default_model_id': model_id}"
-                                attrs="{'required': [('activity_type', '=', 'action')]}"
+                                attrs="{'required': [('step_type', '=', 'action')]}"
                             />
                         </group>
-                        <group attrs="{'invisible':[('activity_type', '!=', 'mail')]}">
+                        <group attrs="{'invisible':[('step_type', '!=', 'mail')]}">
                             <field
                                 name="mail_template_id"
-                                attrs="{'required': [('activity_type', '=', 'mail')]}"
+                                attrs="{'required': [('step_type', '=', 'mail')]}"
                             />
                             <field name="mail_author_id" />
                         </group>
-                        <group
-                            attrs="{'invisible':[('activity_type', '!=', 'activity')]}"
-                        >
+                        <group attrs="{'invisible':[('step_type', '!=', 'activity')]}">
                             <field
                                 name="activity_type_id"
-                                attrs="{'required': [('activity_type', '=', 'activity')]}"
+                                attrs="{'required': [('step_type', '=', 'activity')]}"
                             />
                             <label
                                 for="activity_date_deadline_range"
@@ -148,7 +144,7 @@
                         <page
                             string="Activity"
                             name="activity"
-                            attrs="{'invisible':[('activity_type', '!=', 'activity')]}"
+                            attrs="{'invisible':[('step_type', '!=', 'activity')]}"
                         >
                             <group>
                                 <field name="activity_summary" />
@@ -162,8 +158,8 @@
         </field>
     </record>
 
-    <record model="ir.ui.view" id="automation_configuration_activity_search_view">
-        <field name="model">automation.configuration.activity</field>
+    <record model="ir.ui.view" id="automation_configuration_step_search_view">
+        <field name="model">automation.configuration.step</field>
         <field name="arch" type="xml">
             <search>
                 <!-- TODO -->
@@ -171,8 +167,8 @@
         </field>
     </record>
 
-    <record model="ir.ui.view" id="automation_configuration_activity_tree_view">
-        <field name="model">automation.configuration.activity</field>
+    <record model="ir.ui.view" id="automation_configuration_step_tree_view">
+        <field name="model">automation.configuration.step</field>
         <field name="arch" type="xml">
             <tree>
                 <!-- TODO -->

@@ -7,9 +7,9 @@ from odoo import fields, models
 class MailActivity(models.Model):
     _inherit = "mail.activity"
 
-    automation_record_activity_id = fields.Many2one("automation.record.activity")
+    automation_record_step_id = fields.Many2one("automation.record.step")
 
     def _action_done(self, *args, **kwargs):
-        if self.automation_record_activity_id:
-            self.automation_record_activity_id._set_activity_done()
+        if self.automation_record_step_id:
+            self.automation_record_step_id._set_activity_done()
         return super()._action_done(*args, **kwargs)

@@ -30,15 +30,15 @@
                         <field name="is_test" invisible="1" />
                     </group>
                     <field
-                        name="automation_activity_ids"
-                        widget="automation_activity"
+                        name="automation_step_ids"
+                        widget="automation_step"
                         mode="kanban"
                         class="o_automation_kanban"
                     >
                         <kanban>
                             <field name="id" />
                             <field name="name" />
-                            <field name="activity_type" />
+                            <field name="step_type" />
                             <field name="parent_id" />
                             <field name="trigger_type" />
                             <field name="parent_position" />
@@ -165,21 +165,21 @@
                                             >
                                                 <span
                                                     class="fa fa-envelope"
-                                                    t-if="record.activity_type.raw_value == 'mail'"
+                                                    t-if="record.step_type.raw_value == 'mail'"
                                                     title="Email"
                                                     role="img"
                                                     aria-label="Email"
                                                 />
                                                 <span
                                                     class="fa fa-clock-o"
-                                                    t-if="record.activity_type.raw_value == 'activity'"
+                                                    t-if="record.step_type.raw_value == 'activity'"
                                                     title="Activity"
                                                     role="img"
                                                     aria-label="Activity"
                                                 />
                                                 <span
                                                     class="fa fa-cogs"
-                                                    t-if="record.activity_type.raw_value == 'action'"
+                                                    t-if="record.step_type.raw_value == 'action'"
                                                     title="Other activity"
                                                     role="img"
                                                     aria-label="Other activity"
@@ -193,9 +193,7 @@
                                                         class="oe_kanban_action oe_kanban_action_a"
                                                         t-att-title="record.name.raw_value"
                                                     ><field name="name" /></a></h3>
-                                                <div
-                                                    t-esc="record.activity_type.value"
-                                                />
+                                                <div t-esc="record.step_type.value" />
                                             </div>
                                             <div
                                                 class="o_automation_kanban_header_actions"
@@ -218,7 +216,7 @@
                                         </div>
                                         <div
                                             class="o_automation_kanban_states"
-                                            t-if="record.activity_type.raw_value == 'activity' and record.state.raw_value == 'done'"
+                                            t-if="record.step_type.raw_value == 'activity' and record.state.raw_value == 'done'"
                                         >
                                             <div
                                                 t-attf-class="o_automation_kanban_state {{ record.activity_done_on.raw_value ? 'text-success': 'text-muted' }}"
