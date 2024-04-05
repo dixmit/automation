@@ -149,7 +149,6 @@
                             <field name="parent_id" />
                             <field name="trigger_type" />
                             <field name="parent_position" />
-                            <field name="is_mail_activity" />
                             <field name="trigger_child_types" />
                             <field name="trigger_type_data" />
                             <field name="step_icon" />
