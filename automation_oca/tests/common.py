@@ -57,7 +57,7 @@ class AutomationTestCase(TransactionCase):
                 "configuration_id": cls.configuration.id,
                 "step_type": "action",
                 "server_action_id": cls.action.id,
-                "trigger_type": "activity" if parent_id else "start",
+                "trigger_type": "after_step" if parent_id else "start",
                 **kwargs,
             }
         )

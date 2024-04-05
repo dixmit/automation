@@ -130,13 +130,6 @@ class AutomationConfigurationStep(models.Model):
     graph_data = fields.Json(compute="_compute_graph_data")
     graph_done = fields.Integer(compute="_compute_total_graph_data")
     graph_error = fields.Integer(compute="_compute_total_graph_data")
-    is_mail_activity = fields.Boolean(compute="_compute_is_mail_activity", store=True)
-
-    @api.depends("step_type")
-    def _compute_is_mail_activity(self):
-        mail_activities = self._get_mail_activities()
-        for record in self:
-            record.is_mail_activity = record.step_type in mail_activities
 
     @api.model
     def _get_mail_activities(self):
@@ -145,6 +138,7 @@ class AutomationConfigurationStep(models.Model):
     @api.onchange("trigger_type")
     def _onchange_trigger_type(self):
         if self.trigger_type == "start":
+            # Theoretically, only start allows no parent, so we will keep it this way
             self.parent_id = False
 
     ########################################
@@ -313,6 +307,7 @@ class AutomationConfigurationStep(models.Model):
                 "step_type": [],
                 "message_configuration": False,
                 "message": False,
+                "allow_parent": True,
             },
             "after_step": {
                 "name": _("execution of another step"),
@@ -456,25 +451,29 @@ class AutomationConfigurationStep(models.Model):
             record.trigger_child_types = trigger_child_types
 
     def _check_configuration(self):
-        if self.parent_id and self.trigger_type == "start":
-            raise ValidationError(_("Start configurations cannot have a parent"))
-        if not self.parent_id and self.trigger_type != "start":
+        trigger_conf = self._trigger_types()[self.trigger_type]
+        if not self.parent_id and not trigger_conf.get("allow_parent"):
             raise ValidationError(
-                _(
-                    "Configurations without parent must be executed on 'start of workflow'"
-                )
+                _("%s configurations needs a parent") % trigger_conf["name"]
             )
-        if not self.parent_id.is_mail_activity and self.trigger_type in [
-            "mail_open",
-            "mail_not_open",
-            "mail_reply",
-            "mail_not_reply",
-            "mail_click",
-            "mail_not_clicked",
-            "mail_bounce",
-        ]:
+        if (
+            self.parent_id
+            and "step_type" in trigger_conf
+            and self.parent_id.step_type not in trigger_conf["step_type"]
+        ):
+            step_types = dict(self._fields["step_type"].selection)
             raise ValidationError(
-                _("Configurations triggered from mail must come from a mail activity")
+                _("To use a %(name)s trigger type we need a parent of type %(parents)s")
+                % {
+                    "name": trigger_conf["name"],
+                    "parents": ",".join(
+                        [
+                            name
+                            for step_type, name in step_types.items()
+                            if step_type in trigger_conf["step_type"]
+                        ]
+                    ),
+                }
             )
 
     @api.constrains("parent_id", "parent_id.step_type", "trigger_type")

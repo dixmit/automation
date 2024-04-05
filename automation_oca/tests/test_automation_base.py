@@ -350,7 +350,7 @@ class TestAutomationBase(AutomationTestCase):
     def test_onchange_activity_trigger_type(self):
         activity = self.create_server_action()
         child_activity = self.create_server_action(parent_id=activity.id)
-        self.assertEqual(child_activity.trigger_type, "activity")
+        self.assertEqual(child_activity.trigger_type, "after_step")
         self.assertTrue(child_activity.parent_id)
         with Form(child_activity) as f:
             f.trigger_type = "start"
@@ -441,7 +441,7 @@ class TestAutomationBase(AutomationTestCase):
 
     def test_constrains_no_start_without_parent(self):
         with self.assertRaises(ValidationError):
-            self.create_server_action(parent_id=False, trigger_type="activity")
+            self.create_server_action(parent_id=False, trigger_type="after_step")
 
     def test_is_test_behavior(self):
         """
