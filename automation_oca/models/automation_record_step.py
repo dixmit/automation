@@ -35,6 +35,9 @@ class AutomationRecordStep(models.Model):
     parent_id = fields.Many2one("automation.record.step", readonly=True)
     child_ids = fields.One2many("automation.record.step", inverse_name="parent_id")
     trigger_type = fields.Selection(related="configuration_step_id.trigger_type")
+    trigger_type_data = fields.Json(compute="_compute_trigger_type_data")
+    step_icon = fields.Char(compute="_compute_step_info")
+    step_name = fields.Char(compute="_compute_step_info")
     state = fields.Selection(
         [
             ("scheduled", "Scheduled"),
@@ -69,12 +72,28 @@ class AutomationRecordStep(models.Model):
     activity_done_on = fields.Datetime(readonly=True)
     is_test = fields.Boolean(related="record_id.is_test", store=True)
 
+    @api.depends("trigger_type")
+    def _compute_trigger_type_data(self):
+        trigger_types = self.env["automation.configuration.step"]._trigger_types()
+        for record in self:
+            record.trigger_type_data = trigger_types[record.trigger_type]
+
     @api.depends("parent_id", "parent_id.parent_position")
     def _compute_parent_position(self):
         for record in self:
             record.parent_position = (
                 (record.parent_id.parent_position + 1) if record.parent_id else 0
             )
+
+    @api.depends("step_type")
+    def _compute_step_info(self):
+        step_icons = self.env["automation.configuration.step"]._step_icons()
+        step_name_map = dict(
+            self.env["automation.configuration.step"]._fields["step_type"].selection
+        )
+        for record in self:
+            record.step_icon = step_icons.get(record.step_type, "")
+            record.step_name = step_name_map.get(record.step_type, "")
 
     def _check_to_execute(self):
         if (
@@ -159,7 +178,7 @@ class AutomationRecordStep(models.Model):
             )
         user = False
         if self.configuration_step_id.activity_user_type == "specific":
-            user = self.activity_user_id
+            user = self.configuration_step_id.activity_user_id
         elif self.configuration_step_id.activity_user_type == "generic":
             user = record[self.configuration_step_id.activity_user_field_id.name]
         if user:

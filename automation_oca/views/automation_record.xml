@@ -47,6 +47,9 @@
                             <field name="activity_done_on" />
                             <field name="is_mail_activity" />
                             <field name="state" />
+                            <field name="trigger_type_data" />
+                            <field name="step_icon" />
+                            <field name="step_name" />
                             <templates>
                                 <div
                                     t-name="kanban-box"
@@ -115,45 +118,12 @@
                                                     name="scheduled_date"
                                                     t-elif="record.scheduled_date.value and record.state.raw_value === 'scheduled'"
                                                 />
-                                                <span
-                                                    t-elif="record.trigger_type.raw_value == 'mail_bounce'"
-                                                    class="text-primary"
-                                                >
+                                                <span t-else="" class="text-primary">
                                                     <i
-                                                        class="fa fa-exclamation-circle"
-                                                    /> Not bounced yet
-                                                </span>
-                                                <span
-                                                    t-elif="record.trigger_type.raw_value == 'mail_open'"
-                                                    class="text-primary"
-                                                >
-                                                        <i
-                                                        class="fa fa-envelope-open-o"
-                                                    /> Not opened yet
-                                                    </span>
-                                                <span
-                                                    t-elif="record.trigger_type.raw_value == 'mail_reply'"
-                                                    class="text-primary"
-                                                >
-                                                    <i
-                                                        class="fa fa-reply"
-                                                    /> Not replied yet
-                                                </span>
-                                                <span
-                                                    t-elif="record.trigger_type.raw_value == 'mail_click'"
-                                                    class="text-primary"
-                                                >
-                                                    <i
-                                                        class="fa fa-hand-pointer-o"
-                                                    /> Not clicked yet
-                                                </span>
-                                                <span
-                                                    t-elif="record.trigger_type.raw_value == 'activity_done'"
-                                                    class="text-primary"
-                                                >
-                                                    <i
-                                                        class="fa fa-clock-o"
-                                                    /> Activity not done
+                                                        t-att-class="record.trigger_type_data.raw_value.icon"
+                                                    /> <t
+                                                        t-esc="record.trigger_type_data.raw_value.message"
+                                                    />
                                                 </span>
                                             </strong>
                                         </div>
@@ -164,25 +134,10 @@
                                                 t-attf-class="o_automation_kanban_header_icon {{record.state.raw_value === 'done' ? 'btn-success': (record.state.raw_value === 'scheduled' ? 'btn-primary': (record.state.raw_value === 'error' ? 'btn-danger': (record.state.raw_value === 'rejected' ? 'btn-info': 'btn-warning')))}}"
                                             >
                                                 <span
-                                                    class="fa fa-envelope"
-                                                    t-if="record.step_type.raw_value == 'mail'"
-                                                    title="Email"
+                                                    t-att-class="record.step_icon.raw_value"
+                                                    t-att-title="record.step_name.raw_value"
                                                     role="img"
-                                                    aria-label="Email"
-                                                />
-                                                <span
-                                                    class="fa fa-clock-o"
-                                                    t-if="record.step_type.raw_value == 'activity'"
-                                                    title="Activity"
-                                                    role="img"
-                                                    aria-label="Activity"
-                                                />
-                                                <span
-                                                    class="fa fa-cogs"
-                                                    t-if="record.step_type.raw_value == 'action'"
-                                                    title="Other activity"
-                                                    role="img"
-                                                    aria-label="Other activity"
+                                                    t-att-aria-label="record.step_name.raw_value"
                                                 />
                                             </div>
                                             <div

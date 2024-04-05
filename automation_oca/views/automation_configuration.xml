@@ -70,7 +70,7 @@
                             <field
                                 name="record_test_count"
                                 widget="statinfo"
-                                string="Records"
+                                string="Tests"
                             />
                         </button>
                     </div>
@@ -150,6 +150,10 @@
                             <field name="trigger_type" />
                             <field name="parent_position" />
                             <field name="is_mail_activity" />
+                            <field name="trigger_child_types" />
+                            <field name="trigger_type_data" />
+                            <field name="step_icon" />
+                            <field name="step_name" />
                             <templates>
                                 <div
                                     t-name="kanban-box"
@@ -177,58 +181,14 @@
                                             class="p-2 o_automation_kanban_time_info text-center"
                                         >
                                             <div
-                                                class="text-success"
-                                                t-if="record.trigger_type.raw_value == 'mail_open'"
+                                                t-att-class="record.trigger_type_data.raw_value.color"
+                                                t-if="record.trigger_type_data.raw_value.message_configuration"
                                             >
                                                 <i
-                                                    class="fa fa-envelope-open-o"
-                                                /> Opened after
-                                            </div>
-                                            <div
-                                                class="text-success"
-                                                t-if="record.trigger_type.raw_value == 'mail_reply'"
-                                            >
-                                                <i class="fa fa-reply" /> Replied after
-                                            </div>
-                                            <div
-                                                class="text-success"
-                                                t-if="record.trigger_type.raw_value == 'mail_click'"
-                                            >
-                                                <i
-                                                    class="fa fa-hand-pointer-o"
-                                                /> Clicked after
-                                            </div>
-                                            <div
-                                                class="text-danger"
-                                                t-if="record.trigger_type.raw_value == 'mail_not_open'"
-                                            >
-                                                <i
-                                                    class="fa fa-envelope-open-o"
-                                                /> Not opened within
-                                            </div>
-                                            <div
-                                                class="text-danger"
-                                                t-if="record.trigger_type.raw_value == 'mail_not_reply'"
-                                            >
-                                                <i
-                                                    class="fa fa-reply"
-                                                /> Not replied within
-                                            </div>
-                                            <div
-                                                class="text-danger"
-                                                t-if="record.trigger_type.raw_value == 'mail_not_click'"
-                                            >
-                                                <i
-                                                    class="fa fa-hand-pointer-o"
-                                                /> Not clicked within
-                                            </div>
-                                            <div
-                                                class="text-danger"
-                                                t-if="record.trigger_type.raw_value == 'mail_bounce'"
-                                            >
-                                                <i
-                                                    class="fa fa-exclamation-circle"
-                                                /> Bounced after
+                                                    t-att-class="record.trigger_type_data.raw_value.icon"
+                                                /> <t
+                                                    t-esc="record.trigger_type_data.raw_value.message_configuration"
+                                                />
                                             </div>
                                             <strong>
                                                 <i
@@ -251,25 +211,10 @@
                                                 type="edit"
                                             >
                                                 <span
-                                                    class="fa fa-envelope"
-                                                    t-if="record.step_type.raw_value == 'mail'"
-                                                    title="Email"
+                                                    t-att-class="record.step_icon.raw_value"
+                                                    t-att-title="record.step_name.raw_value"
                                                     role="img"
-                                                    aria-label="Email"
-                                                />
-                                                <span
-                                                    class="fa fa-clock-o"
-                                                    t-if="record.step_type.raw_value == 'activity'"
-                                                    title="Activity"
-                                                    role="img"
-                                                    aria-label="Activity"
-                                                />
-                                                <span
-                                                    class="fa fa-cogs"
-                                                    t-if="record.step_type.raw_value == 'action'"
-                                                    title="Action"
-                                                    role="img"
-                                                    aria-label="Action"
+                                                    t-att-aria-label="record.step_name.raw_value"
                                                 />
                                             </button>
                                             <div
@@ -341,126 +286,27 @@
                                             <div
                                                 class="o_automation_kanban_child_add_buttons"
                                             >
-                                                <div
-                                                    trigger-type="after_step"
-                                                    class="text-success o_automation_kanban_child_add_button"
+                                                <t
+                                                    t-foreach="record.trigger_child_types.raw_value"
+                                                    t-as="trigger_type_id"
+                                                    t-key="trigger_type_id"
                                                 >
-                                                    <i
-                                                        class="fa fa-code-fork fa-rotate-180 fa-flip-vertical"
-                                                        title="Add Another Step"
-                                                        role="img"
-                                                        aria-label="Add Another Step"
+                                                    <t
+                                                        t-set="trigger_type"
+                                                        t-value="record.trigger_child_types.raw_value[trigger_type_id]"
                                                     />
-                                                </div>
-                                                <div
-                                                    t-if="record.step_type.raw_value == 'activity'"
-                                                    trigger-type="activity_done"
-                                                    class="text-success o_automation_kanban_child_add_button"
-                                                >
+                                                    <div
+                                                        t-att-trigger-type="trigger_type_id"
+                                                        class="o_automation_kanban_child_add_button"
+                                                    >
                                                     <i
-                                                        class="fa fa-clock-o"
-                                                        title="Activity Done"
-                                                        role="img"
-                                                        aria-label="Activity Done"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.step_type.raw_value == 'activity'"
-                                                    trigger-type="activity_not_done"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-clock-o"
-                                                        title="Activity Not Done"
-                                                        role="img"
-                                                        aria-label="Activity Not Done"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.is_mail_activity.raw_value"
-                                                    trigger-type="mail_open"
-                                                    class="text-success o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-envelope-open-o"
-                                                        title="Opened"
-                                                        role="img"
-                                                        aria-label="Opened"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.is_mail_activity.raw_value"
-                                                    trigger-type="mail_not_open"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-envelope-open-o "
-                                                        title="Not Opened"
-                                                        role="img"
-                                                        aria-label="Not Opened"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.is_mail_activity.raw_value"
-                                                    trigger-type="mail_reply"
-                                                    type="new_child"
-                                                    class="text-success o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-reply"
-                                                        title="Replied"
-                                                        role="img"
-                                                        aria-label="Replied"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.is_mail_activity.raw_value"
-                                                    trigger-type="mail_not_reply"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-reply"
-                                                        title="Not Replied"
-                                                        role="img"
-                                                        aria-label="Not Replied"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.is_mail_activity.raw_value"
-                                                    trigger-type="mail_click"
-                                                    class="text-success o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-hand-pointer-o"
-                                                        title="Clicked"
-                                                        role="img"
-                                                        aria-label="Clicked"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.is_mail_activity.raw_value"
-                                                    trigger-type="mail_not_click"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-hand-pointer-o"
-                                                        title="Not Clicked"
-                                                        role="img"
-                                                        aria-label="Not Clicked"
-                                                    />
-                                                </div>
-                                                <div
-                                                    t-if="record.is_mail_activity.raw_value"
-                                                    trigger-type="mail_bounce"
-                                                    class="text-danger o_automation_kanban_child_add_button"
-                                                >
-                                                    <i
-                                                        class="fa fa-exclamation-circle"
-                                                        title="Bounced"
-                                                        role="img"
-                                                        aria-label="Bounced"
-                                                    />
-                                                </div>
+                                                            t-attf-class="{{trigger_type.icon}} {{trigger_type.color}}"
+                                                            t-att-title="trigger_type.name"
+                                                            role="img"
+                                                            t-att-aria-label="trigger_type.name"
+                                                        />
+                                                    </div>
+                                                </t>
                                             </div>
                                         </div>
                                     </div>

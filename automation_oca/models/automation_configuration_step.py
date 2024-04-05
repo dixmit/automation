@@ -41,6 +41,8 @@ class AutomationConfigurationStep(models.Model):
         required=True,
         default="mail",
     )
+    step_icon = fields.Char(compute="_compute_step_info")
+    step_name = fields.Char(compute="_compute_step_info")
     trigger_interval_hours = fields.Integer(
         compute="_compute_trigger_interval_hours", store=True
     )
@@ -59,6 +61,8 @@ class AutomationConfigurationStep(models.Model):
         required=True,
         default="start",
     )
+    trigger_child_types = fields.Json(compute="_compute_trigger_child_types")
+    trigger_type_data = fields.Json(compute="_compute_trigger_type_data")
     mail_author_id = fields.Many2one(
         "res.partner", required=True, default=lambda r: r.env.user.id
     )
@@ -290,55 +294,136 @@ class AutomationConfigurationStep(models.Model):
 
     @api.model
     def _trigger_types(self):
+        """
+        This function will return a dictionary that map trigger_types to its configurations.
+        Each trigger_type can contain:
+        - name (Required field)
+        - step type: List of step types that succeed after this.
+          If it is false, it will work for all step types,
+          otherwise only for the ones on the list
+        - color: Color of the icon
+        - icon: Icon to show
+        - message_configuration: Message to show on the step configuration
+        - allow_expiry: True if it allows expiration of activity
+        - message: Message to show on the record if expected is not date defined
+        """
         return {
             "start": {
                 "name": _("start of workflow"),
+                "step_type": [],
+                "message_configuration": False,
+                "message": False,
             },
             "after_step": {
                 "name": _("execution of another step"),
+                "color": "text-success",
+                "icon": "fa fa-code-fork fa-rotate-180 fa-flip-vertical",
+                "message_configuration": False,
+                "message": False,
             },
             "mail_open": {
                 "name": _("Mail opened"),
                 "allow_expiry": True,
                 "step_type": ["mail"],
+                "color": "text-success",
+                "icon": "fa fa-envelope-open-o",
+                "message_configuration": _("Opened after"),
+                "message": _("Not opened yet"),
             },
             "mail_not_open": {
                 "name": _("Mail not opened"),
                 "step_type": ["mail"],
+                "color": "text-danger",
+                "icon": "fa fa-envelope-open-o",
+                "message_configuration": _("Not opened within"),
+                "message": False,
             },
             "mail_reply": {
                 "name": _("Mail replied"),
                 "allow_expiry": True,
                 "step_type": ["mail"],
+                "color": "text-success",
+                "icon": "fa fa-reply",
+                "message_configuration": _("Replied after"),
+                "message": _("Not replied yet"),
             },
             "mail_not_reply": {
                 "name": _("Mail not replied"),
                 "step_type": ["mail"],
+                "color": "text-danger",
+                "icon": "fa fa-reply",
+                "message_configuration": _("Not replied within"),
+                "message": False,
             },
             "mail_click": {
                 "name": _("Mail clicked"),
                 "allow_expiry": True,
                 "step_type": ["mail"],
+                "color": "text-success",
+                "icon": "fa fa-hand-pointer-o",
+                "message_configuration": _("Clicked after"),
+                "message": _("Not clicked yet"),
             },
             "mail_not_clicked": {
                 "name": _("Mail not clicked"),
                 "step_type": ["mail"],
+                "color": "text-danger",
+                "icon": "fa fa-hand-pointer-o",
+                "message_configuration": _("Not clicked within"),
+                "message": False,
             },
             "mail_bounce": {
                 "name": _("Mail bounced"),
                 "allow_expiry": True,
                 "step_type": ["mail"],
+                "color": "text-danger",
+                "icon": "fa fa-exclamation-circle",
+                "message_configuration": _("Bounced after"),
+                "message": _("Not bounced yet"),
             },
             "activity_done": {
                 "name": _("Activity has been finished"),
                 "step_type": ["activity"],
+                "color": "text-success",
+                "icon": "fa fa-clock-o",
+                "message_configuration": _("After finished"),
+                "message": _("Activity not done"),
             },
             "activity_not_done": {
                 "name": _("Activity has not been finished"),
                 "allow_expiry": True,
                 "step_type": ["activity"],
+                "color": "text-danger",
+                "icon": "fa fa-clock-o",
+                "message_configuration": _("Not finished within"),
+                "message": False,
             },
         }
+
+    @api.model
+    def _step_icons(self):
+        """
+        This function will return a dictionary that maps step types and icons
+        """
+        return {
+            "mail": "fa fa-envelope",
+            "activity": "fa fa-clock-o",
+            "action": "fa fa-cogs",
+        }
+
+    @api.depends("step_type")
+    def _compute_step_info(self):
+        step_icons = self._step_icons()
+        step_name_map = dict(self._fields["step_type"].selection)
+        for record in self:
+            record.step_icon = step_icons.get(record.step_type, "")
+            record.step_name = step_name_map.get(record.step_type, "")
+
+    @api.depends("trigger_type")
+    def _compute_trigger_type_data(self):
+        trigger_types = self._trigger_types()
+        for record in self:
+            record.trigger_type_data = trigger_types[record.trigger_type]
 
     @api.depends("trigger_type")
     def _compute_allow_expiry(self):
@@ -356,6 +441,19 @@ class AutomationConfigurationStep(models.Model):
                 trigger_types[record.trigger_type].get("allow_expiry", False)
                 and record.expiry
             )
+
+    @api.depends("step_type")
+    def _compute_trigger_child_types(self):
+        trigger_types = self._trigger_types()
+        for record in self:
+            trigger_child_types = {}
+            for trigger_type_id, trigger_type in trigger_types.items():
+                if "step_type" not in trigger_type:
+                    # All are allowed
+                    trigger_child_types[trigger_type_id] = trigger_type
+                elif record.step_type in trigger_type["step_type"]:
+                    trigger_child_types[trigger_type_id] = trigger_type
+            record.trigger_child_types = trigger_child_types
 
     def _check_configuration(self):
         if self.parent_id and self.trigger_type == "start":
