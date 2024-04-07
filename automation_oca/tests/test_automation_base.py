@@ -348,6 +348,15 @@ class TestAutomationBase(AutomationTestCase):
             )
 
     def test_onchange_activity_trigger_type(self):
+        activity = self.create_mail_activity()
+        child_activity = self.create_mail_activity(parent_id=activity.id)
+        self.assertEqual(child_activity.trigger_type, "after_step")
+        self.assertTrue(child_activity.parent_id)
+        with Form(child_activity) as f:
+            f.trigger_type = "mail_bounce"
+            self.assertTrue(f.parent_id)
+
+    def test_onchange_activity_trigger_type_start(self):
         activity = self.create_server_action()
         child_activity = self.create_server_action(parent_id=activity.id)
         self.assertEqual(child_activity.trigger_type, "after_step")
@@ -462,3 +471,43 @@ class TestAutomationBase(AutomationTestCase):
         self.assertEqual(self.configuration, record.configuration_id)
         self.assertEqual(1, self.configuration.record_test_count)
         self.assertEqual(0, self.configuration.record_count)
+
+    def test_check_icons(self):
+        action = self.create_server_action()
+        mail = self.create_mail_activity()
+        activity = self.create_activity_action()
+        self.assertEqual(action.step_icon, "fa fa-cogs")
+        self.assertEqual(mail.step_icon, "fa fa-envelope")
+        self.assertEqual(activity.step_icon, "fa fa-clock-o")
+
+    def test_trigger_types(self):
+        action = self.create_server_action()
+        child = self.create_server_action(parent_id=action.id)
+        self.assertTrue(action.trigger_type_data["allow_parent"])
+        self.assertFalse(child.trigger_type_data.get("allow_parent", False))
+
+    def test_trigger_childs(self):
+        action = self.create_server_action()
+        mail = self.create_mail_activity()
+        activity = self.create_activity_action()
+        self.assertEqual(1, len(action.trigger_child_types))
+        self.assertEqual({"after_step"}, set(action.trigger_child_types.keys()))
+        self.assertEqual(8, len(mail.trigger_child_types))
+        self.assertEqual(
+            {
+                "after_step",
+                "mail_open",
+                "mail_not_open",
+                "mail_reply",
+                "mail_not_reply",
+                "mail_click",
+                "mail_not_clicked",
+                "mail_bounce",
+            },
+            set(mail.trigger_child_types.keys()),
+        )
+        self.assertEqual(3, len(activity.trigger_child_types))
+        self.assertEqual(
+            {"after_step", "activity_done", "activity_not_done"},
+            set(activity.trigger_child_types.keys()),
+        )

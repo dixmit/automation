@@ -1,6 +1,8 @@
 # Copyright 2024 Dixmit
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+from odoo.tests import Form
+
 from .common import AutomationTestCase
 
 
@@ -128,3 +130,15 @@ class TestAutomationActivity(AutomationTestCase):
         self.assertEqual("scheduled", record_child_activity.state)
         record_child_activity.run()
         self.assertEqual("done", record_child_activity.state)
+
+    def test_compute_default_values(self):
+        activity = self.create_server_action()
+        self.assertFalse(activity.activity_user_id)
+        with Form(activity) as f:
+            f.step_type = "activity"
+            f.activity_type_id = self.activity_type
+        self.assertTrue(activity.activity_user_id)
+        with Form(activity) as f:
+            f.step_type = "action"
+            f.server_action_id = self.action
+        self.assertFalse(activity.activity_user_id)

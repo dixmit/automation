@@ -71,7 +71,7 @@ class AutomationTestCase(TransactionCase):
                 "configuration_id": cls.configuration.id,
                 "step_type": "activity",
                 "activity_type_id": cls.activity_type.id,
-                "trigger_type": "activity" if parent_id else "start",
+                "trigger_type": "after_step" if parent_id else "start",
                 **kwargs,
             }
         )
@@ -85,7 +85,8 @@ class AutomationTestCase(TransactionCase):
                 "configuration_id": cls.configuration.id,
                 "step_type": "mail",
                 "mail_template_id": cls.template.id,
-                "trigger_type": trigger_type or ("activity" if parent_id else "start"),
+                "trigger_type": trigger_type
+                or ("after_step" if parent_id else "start"),
                 **kwargs,
             }
         )

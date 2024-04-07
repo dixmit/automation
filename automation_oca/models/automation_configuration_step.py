@@ -131,10 +131,6 @@ class AutomationConfigurationStep(models.Model):
     graph_done = fields.Integer(compute="_compute_total_graph_data")
     graph_error = fields.Integer(compute="_compute_total_graph_data")
 
-    @api.model
-    def _get_mail_activities(self):
-        return ["mail"]
-
     @api.onchange("trigger_type")
     def _onchange_trigger_type(self):
         if self.trigger_type == "start":
