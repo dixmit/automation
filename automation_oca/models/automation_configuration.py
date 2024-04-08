@@ -259,8 +259,10 @@ class AutomationConfiguration(models.Model):
         self.ensure_one()
         if self.state not in ["run", "ondemand"]:
             return
+        records = self.env["automation.record"]
         for record in self._get_automation_records_to_create():
-            self._create_record(record)
+            records |= self._create_record(record)
+        records.automation_step_ids._trigger_activities()
 
     def _create_record(self, record, **kwargs):
         return self.env["automation.record"].create(

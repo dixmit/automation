@@ -116,10 +116,10 @@ class AutomationRecordStep(models.Model):
             return False
         return True
 
-    def run(self):
+    def run(self, trigger_activity=True):
         self.ensure_one()
         if self.state != "scheduled":
-            return
+            return self.browse()
         if (
             self.record_id.resource_ref is None
             or not self.record_id.resource_ref.filtered_domain(
@@ -128,10 +128,15 @@ class AutomationRecordStep(models.Model):
             or not self._check_to_execute()
         ):
             self.write({"state": "rejected", "processed_on": fields.Datetime.now()})
-            return
+            return self.browse()
         try:
-            getattr(self, "_run_%s" % self.configuration_step_id.step_type)()
+            result = getattr(self, "_run_%s" % self.configuration_step_id.step_type)()
             self.write({"state": "done", "processed_on": fields.Datetime.now()})
+            if result:
+                childs = self._fill_childs()
+                if trigger_activity:
+                    childs._trigger_activities()
+                return childs
         except Exception:
             buff = StringIO()
             traceback.print_exc(file=buff)
@@ -143,21 +148,19 @@ class AutomationRecordStep(models.Model):
                     "processed_on": fields.Datetime.now(),
                 }
             )
+        return self.browse()
 
     def _fill_childs(self, **kwargs):
-        self.record_id.write(
-            {
-                "automation_step_ids": [
-                    (
-                        0,
-                        0,
-                        activity._create_record_activity_vals(
-                            self.record_id.resource_ref, parent_id=self.id, **kwargs
-                        ),
-                    )
-                    for activity in self.configuration_step_id.child_ids
-                ]
-            }
+        return self.create(
+            [
+                activity._create_record_activity_vals(
+                    self.record_id.resource_ref,
+                    parent_id=self.id,
+                    record_id=self.record_id.id,
+                    **kwargs
+                )
+                for activity in self.configuration_step_id.child_ids
+            ]
         )
 
     def _run_activity(self):
@@ -182,7 +185,7 @@ class AutomationRecordStep(models.Model):
         if user:
             vals["user_id"] = user.id
         record.activity_schedule(**vals)
-        self._fill_childs()
+        return True
 
     def _run_mail(self):
         author_id = self.configuration_step_id.mail_author_id.id
@@ -217,8 +220,7 @@ class AutomationRecordStep(models.Model):
             # We just abort the sending, but we want to check how the generation works
             composer._action_send_mail(auto_commit=auto_commit)
         self.mail_status = "sent"
-        self._fill_childs()
-        return
+        return True
 
     def _get_mail_tracking_token(self):
         return tools.hmac(self.env(su=True), "automation_oca", self.id)
@@ -238,16 +240,18 @@ class AutomationRecordStep(models.Model):
             active_model=self.record_id.model,
             active_ids=[self.record_id.res_id],
         ).run()
-        self._fill_childs()
+        return True
 
     def _cron_automation_steps(self):
+        childs = self.browse()
         for activity in self.search(
             [
                 ("state", "=", "scheduled"),
                 ("scheduled_date", "<=", fields.Datetime.now()),
             ]
         ):
-            activity.run()
+            childs |= activity.run(trigger_activity=False)
+        childs._trigger_activities()
         self.search(
             [
                 ("state", "=", "scheduled"),
@@ -255,6 +259,19 @@ class AutomationRecordStep(models.Model):
                 ("expiry_date", "<=", fields.Datetime.now()),
             ]
         )._expiry()
+
+    def _trigger_activities(self):
+        # Creates a cron trigger.
+        # On glue modules we could use queue job for a more discrete example
+        # But cron trigger fulfills the job in some way
+        for date in set(self.mapped("scheduled_date")):
+            if date:
+                self.env["ir.cron.trigger"].create(
+                    {
+                        "call_at": date,
+                        "cron_id": self.env.ref("automation_oca.cron_step_execute").id,
+                    }
+                )
 
     def _expiry(self):
         self.write({"state": "expired", "processed_on": fields.Datetime.now()})
@@ -265,11 +282,13 @@ class AutomationRecordStep(models.Model):
         )
 
     def _activate(self):
-        for record in self.filtered(lambda r: not r.scheduled_date):
+        todo = self.filtered(lambda r: not r.scheduled_date)
+        for record in todo:
             config = record.configuration_step_id
             record.scheduled_date = fields.Datetime.now() + relativedelta(
                 **{config.trigger_interval_type: config.trigger_interval}
             )
+        record._trigger_activities()
 
     def _set_activity_done(self):
         self.write({"activity_done_on": fields.Datetime.now()})
