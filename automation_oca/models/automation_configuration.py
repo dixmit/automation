@@ -38,15 +38,17 @@ class AutomationConfiguration(models.Model):
         "('ttype', 'in', ['char', 'selection', 'integer', 'text', 'many2one'])]",
         help="Used to avoid duplicates",
     )
+    is_periodic = fields.Boolean(
+        help="Mark it if you want to make the execution periodic"
+    )
     # The idea of flow of states will be:
-    # draft -> run       -> stop -> draft (for periodic execution)
+    # draft -> run       -> done -> draft (for periodic execution)
     #       -> on demand -> done -> draft (for on demand execution)
     state = fields.Selection(
         [
             ("draft", "Draft"),
-            ("run", "Running"),
+            ("periodic", "Periodic"),
             ("ondemand", "On demand"),
-            ("stop", "Stopped"),
             ("done", "Done"),
         ],
         default="draft",
@@ -121,7 +123,7 @@ class AutomationConfiguration(models.Model):
             mapped_data[d["configuration_id"][0]][d["state"]] = d["__count"]
         for record in self:
             record.record_done_count = mapped_data[record.id].get("done", 0)
-            record.record_run_count = mapped_data[record.id].get("run", 0)
+            record.record_run_count = mapped_data[record.id].get("periodic", 0)
             record.record_count = sum(mapped_data[record.id].values())
 
     @api.depends()
@@ -146,7 +148,7 @@ class AutomationConfiguration(models.Model):
     @api.depends("state")
     def _compute_next_execution_date(self):
         for record in self:
-            if record.state == "run":
+            if record.state == "periodic":
                 record.next_execution_date = self.env.ref(
                     "automation_oca.cron_configuration_run"
                 ).nextcall
@@ -168,28 +170,18 @@ class AutomationConfiguration(models.Model):
         self.ensure_one()
         if self.state != "draft":
             raise ValidationError(_("State must be in draft in order to start"))
-        self.state = "run"
-
-    def start_on_demand_automation(self):
-        self.ensure_one()
-        if self.state != "draft":
-            raise ValidationError(_("State must be in draft in order to start"))
-        self.state = "ondemand"
+        self.state = "periodic" if self.is_periodic else "ondemand"
 
     def done_automation(self):
         self.ensure_one()
         self.state = "done"
-
-    def stop_automation(self):
-        self.ensure_one()
-        self.state = "stop"
 
     def back_to_draft(self):
         self.ensure_one()
         self.state = "draft"
 
     def cron_automation(self):
-        for record in self.search([("state", "=", "run")]):
+        for record in self.search([("state", "=", "periodic")]):
             record.run_automation()
 
     def _get_automation_records_to_create(self):
@@ -257,7 +249,7 @@ class AutomationConfiguration(models.Model):
 
     def run_automation(self):
         self.ensure_one()
-        if self.state not in ["run", "ondemand"]:
+        if self.state not in ["periodic", "ondemand"]:
             return
         records = self.env["automation.record"]
         for record in self._get_automation_records_to_create():

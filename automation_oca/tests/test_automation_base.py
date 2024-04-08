@@ -37,7 +37,8 @@ class TestAutomationBase(AutomationTestCase):
         We want to check that the system does not generate using cron
         on on demand configurations, but allows manuall execution
         """
-        self.configuration.start_on_demand_automation()
+        self.configuration.is_periodic = False
+        self.configuration.start_automation()
         self.env["automation.configuration"].cron_automation()
         self.assertEqual(
             0,
@@ -248,9 +249,9 @@ class TestAutomationBase(AutomationTestCase):
         Draft -> Run -> Stop -> Draft
         """
         self.configuration.start_automation()
-        self.assertEqual(self.configuration.state, "run")
-        self.configuration.stop_automation()
-        self.assertEqual(self.configuration.state, "stop")
+        self.assertEqual(self.configuration.state, "periodic")
+        self.configuration.done_automation()
+        self.assertEqual(self.configuration.state, "done")
         self.env["automation.configuration"].cron_automation()
         self.assertFalse(
             self.env["automation.record"].search(

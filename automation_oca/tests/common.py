@@ -45,6 +45,7 @@ class AutomationTestCase(TransactionCase):
             {
                 "name": "Test configuration",
                 "model_id": cls.env.ref("base.model_res_partner").id,
+                "is_periodic": True,
             }
         )
 

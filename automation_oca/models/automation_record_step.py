@@ -288,7 +288,7 @@ class AutomationRecordStep(models.Model):
             record.scheduled_date = fields.Datetime.now() + relativedelta(
                 **{config.trigger_interval_type: config.trigger_interval}
             )
-        record._trigger_activities()
+        todo._trigger_activities()
 
     def _set_activity_done(self):
         self.write({"activity_done_on": fields.Datetime.now()})

@@ -225,7 +225,7 @@
                 <field
                     name="state"
                     widget="badge"
-                    decoration-info="state == 'run'"
+                    decoration-info="state == 'periodic'"
                     decoration-success="state == 'done'"
                 />
             </tree>
