@@ -16,6 +16,13 @@
                         attrs="{'invisible': [('state', '!=', 'draft')]}"
                     />
                     <button
+                        class="btn btn-primary"
+                        type="object"
+                        name="run_automation"
+                        attrs="{'invisible': [('state', '!=', 'ondemand')]}"
+                        string="Generate new records"
+                    />
+                    <button
                         type="object"
                         name="done_automation"
                         class="btn-secondary"
@@ -39,10 +46,11 @@
                     <button
                         type="object"
                         name="run_automation"
-                        class="btn-primary"
+                        class="btn-info"
                         string="Enforce generation"
                         attrs="{'invisible': [('state', '!=', 'periodic')]}"
                     />
+
                     <field name="state" widget="statusbar" />
                 </header>
                 <div
@@ -50,18 +58,21 @@
                     role="alert"
                     attrs="{'invisible': [('state', '!=', 'draft')]}"
                 >
-                    <div class="px-4">
-                        Automation configurations can be executed periodically automatically or on demand.
-                    </div>
-                    <div class="px-4">
+                    <div
+                        class="px-4"
+                        attrs="{'invisible': [('is_periodic', '=', False)]}"
+                    >
                         On <b
                         >periodical configurations</b>, the records are created automatically by a cron job.
-                        It is great for tasks that don't need a user validation and certification.
+                        It is great for tasks that don't need user validation.
                     </div>
-                    <div class="px-4">
+                    <div
+                        class="px-4"
+                        attrs="{'invisible': [('is_periodic', '=', True)]}"
+                    >
                         On <b
-                        >on demand configurations</b>, the records are created only by pressing the Run button of the configuration.
-                        It is useful if you want to control the execution and created records personally.
+                        >on demand configurations</b>, the records are created only by pressing the run button.
+                        It is useful if you want to control the execution and created records manually.
                     </div>
                 </div>
                 <div
@@ -70,15 +81,7 @@
                     attrs="{'invisible': [('state', '!=', 'ondemand')]}"
                 >
                     <div class="px-4">
-                        This configuration only generates new records on demand. Press the button in order to execute them manually.
-                    </div>
-                    <div class="px-4 row">
-                        <button
-                            class="col btn btn-primary mx-4"
-                            type="object"
-                            name="run_automation"
-                            string="Generate new records"
-                        />
+                        This is configuration only generates new records on demand. Press the button in order to execute them manually.
                     </div>
                 </div>
                 <div
