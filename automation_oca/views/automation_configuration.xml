@@ -10,13 +10,6 @@
                 <header>
                     <button
                         type="object"
-                        name="start_automation"
-                        class="btn-primary"
-                        string="Start"
-                        attrs="{'invisible': [('state', '!=', 'draft')]}"
-                    />
-                    <button
-                        type="object"
                         name="stop_automation"
                         class="btn-secondary"
                         string="Stop"
@@ -24,10 +17,17 @@
                     />
                     <button
                         type="object"
+                        name="done_automation"
+                        class="btn-secondary"
+                        string="Mark as done"
+                        attrs="{'invisible': [('state', '!=', 'ondemand')]}"
+                    />
+                    <button
+                        type="object"
                         name="back_to_draft"
                         class="btn-secondary"
                         string="Back to draft"
-                        attrs="{'invisible': [('state', '!=', 'stop')]}"
+                        attrs="{'invisible': [('state', 'not in', ['stop', 'done'])]}"
                     />
                     <button
                         type="action"
@@ -40,11 +40,78 @@
                         type="object"
                         name="run_automation"
                         class="btn-primary"
-                        string="Run"
+                        string="Enforce generation"
                         attrs="{'invisible': [('state', '!=', 'run')]}"
                     />
                     <field name="state" widget="statusbar" />
                 </header>
+                <div
+                    class="alert alert-info"
+                    role="alert"
+                    attrs="{'invisible': [('state', '!=', 'draft')]}"
+                >
+                    <div class="px-4">
+                        Automation configurations can be executed periodically automatically or on demand.
+                    </div>
+                    <div class="px-4">
+                        On <b
+                        >periodical configurations</b>, the records are created automatically by a cron job.
+                        It is great for tasks that don't need a user validation and certification.
+                    </div>
+                    <div class="px-4">
+                        On <b
+                        >on demand configurations</b>, the records are created only by pressing the Run button of the configuration.
+                        It is useful if you want to control the execution and created records personally.
+                    </div>
+                    <div
+                        class="px-4"
+                    >Select and start the best option for your case</div>
+                    <div class="px-4 row">
+                        <button
+                            class="col btn btn-primary mx-4"
+                            type="object"
+                            name="start_automation"
+                            icon="fa-clock-o"
+                            string="Start periodical"
+                        />
+                        <button
+                            class="col btn btn-primary mx-4"
+                            type="object"
+                            name="start_on_demand_automation"
+                            icon="fa-cogs"
+                            string="Start On demand"
+                        />
+                    </div>
+                </div>
+                <div
+                    class="alert alert-info"
+                    role="alert"
+                    attrs="{'invisible': [('state', '!=', 'ondemand')]}"
+                >
+                    <div class="px-4">
+                        This configuration only generates new records on demand. Press the button in order to execute them manually.
+                    </div>
+                    <div class="px-4 row">
+                        <button
+                            class="col btn btn-primary mx-4"
+                            type="object"
+                            name="run_automation"
+                            string="Generrate new records"
+                        />
+                    </div>
+                </div>
+                <div
+                    class="alert alert-info"
+                    role="alert"
+                    attrs="{'invisible': [('state', '!=', 'run')]}"
+                >
+                    <div class="px-4">
+                        This a periodical configuration. New records are generated automatically.
+                        Next execution is programed for <field
+                            name="next_execution_date"
+                        />
+                    </div>
+                </div>
                 <sheet>
                     <div name="button_box">
                         <button

@@ -15,7 +15,7 @@ from .common import AutomationTestCase
 class TestAutomationBase(AutomationTestCase):
     def test_no_cron_no_start(self):
         """
-        We want to check that the system only generates on validated configurations
+        We want to check that the system only generates on periodical configurations
         """
         self.env["automation.configuration"].cron_automation()
         self.assertEqual(
@@ -31,6 +31,38 @@ class TestAutomationBase(AutomationTestCase):
                 [("configuration_id", "=", self.configuration.id)]
             ),
         )
+
+    def test_no_cron_on_demand(self):
+        """
+        We want to check that the system does not generate using cron
+        on on demand configurations, but allows manuall execution
+        """
+        self.configuration.start_on_demand_automation()
+        self.env["automation.configuration"].cron_automation()
+        self.assertEqual(
+            0,
+            self.env["automation.record"].search_count(
+                [("configuration_id", "=", self.configuration.id)]
+            ),
+        )
+        self.configuration.run_automation()
+        self.assertNotEqual(
+            0,
+            self.env["automation.record"].search_count(
+                [("configuration_id", "=", self.configuration.id)]
+            ),
+        )
+
+    def test_next_execution_date(self):
+        with freeze_time("2022-01-01"):
+            self.assertFalse(self.configuration.next_execution_date)
+            self.env.ref(
+                "automation_oca.cron_configuration_run"
+            ).nextcall = datetime.now()
+            self.configuration.start_automation()
+            self.assertEqual(
+                self.configuration.next_execution_date, datetime(2022, 1, 1, 0, 0, 0)
+            )
 
     def test_cron_no_duplicates(self):
         """

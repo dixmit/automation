@@ -38,8 +38,17 @@ class AutomationConfiguration(models.Model):
         "('ttype', 'in', ['char', 'selection', 'integer', 'text', 'many2one'])]",
         help="Used to avoid duplicates",
     )
+    # The idea of flow of states will be:
+    # draft -> run       -> stop -> draft (for periodic execution)
+    #       -> on demand -> done -> draft (for on demand execution)
     state = fields.Selection(
-        [("draft", "Draft"), ("run", "Running"), ("stop", "Stopped")],
+        [
+            ("draft", "Draft"),
+            ("run", "Running"),
+            ("ondemand", "On demand"),
+            ("stop", "Stopped"),
+            ("done", "Done"),
+        ],
         default="draft",
         required=True,
         group_expand="_group_expand_states",
@@ -59,6 +68,7 @@ class AutomationConfiguration(models.Model):
     activity_mail_count = fields.Integer(compute="_compute_activity_count")
     activity_action_count = fields.Integer(compute="_compute_activity_count")
     click_count = fields.Integer(compute="_compute_click_count")
+    next_execution_date = fields.Datetime(compute="_compute_next_execution_date")
 
     @api.depends("filter_id.domain", "filter_id", "editable_domain")
     def _compute_domain(self):
@@ -133,6 +143,16 @@ class AutomationConfiguration(models.Model):
                 [] if not record.model_id else [("model_id", "=", record.model_id.id)]
             )
 
+    @api.depends("state")
+    def _compute_next_execution_date(self):
+        for record in self:
+            if record.state == "run":
+                record.next_execution_date = self.env.ref(
+                    "automation_oca.cron_configuration_run"
+                ).nextcall
+            else:
+                record.next_execution_date = False
+
     @api.onchange("filter_id")
     def _onchange_filter(self):
         self.model_id = self.filter_id.model_id
@@ -149,6 +169,16 @@ class AutomationConfiguration(models.Model):
         if self.state != "draft":
             raise ValidationError(_("State must be in draft in order to start"))
         self.state = "run"
+
+    def start_on_demand_automation(self):
+        self.ensure_one()
+        if self.state != "draft":
+            raise ValidationError(_("State must be in draft in order to start"))
+        self.state = "ondemand"
+
+    def done_automation(self):
+        self.ensure_one()
+        self.state = "done"
 
     def stop_automation(self):
         self.ensure_one()
@@ -227,7 +257,7 @@ class AutomationConfiguration(models.Model):
 
     def run_automation(self):
         self.ensure_one()
-        if self.state != "run":
+        if self.state not in ["run", "ondemand"]:
             return
         for record in self._get_automation_records_to_create():
             self._create_record(record)
