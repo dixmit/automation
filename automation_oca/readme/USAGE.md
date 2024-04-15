@@ -8,8 +8,12 @@ Configure your processes
   Filters can be established in the proper field in the Automation Configuration record.
 5. Create the different steps by clicking the "ADD" button inside the automation configuration form.
 6. Create child steps by clicking the "Add child activity" at the bottom of a created step.
-7. Press `Start`. Now, every 6 hours, a process will check if new records need to be created.
-8. Inside the process, you can check all the created items.
+7.
+8. Select the kind of configuration you create. You can choose between:
+    * *Periodic configurations*: every 6 hours, a process will check if new records need to be created.
+    * *On demand configurations*: user need to execute manually the job.
+9. Press `Start`.
+10. Inside the process, you can check all the created items.
 
 ![Configuration Screenshot](./static/description/configuration.png)
 
