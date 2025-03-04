@@ -1,0 +1,37 @@
+<templates xml:space="preserve">
+    <t t-name="automation_flowchart.ActionFlowchart" owl="1">
+        <div style="position: absolute; width: 100%; height: 100%;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd;"
+            >
+                <!-- Botón de volver -->
+                <button class="btn btn-secondary" t-on-click="goBack">
+                    <t t-esc="`${recordName}`" />
+                </button>
+
+                <!-- Botón de editar -->
+                <button class="btn btn-primary">Editar</button>
+            </div>
+            <iframe
+                class="bg-white"
+                style="position:absolute; width: 100%; height: 100%; border: none"
+                t-ref="flowchart_iframe"
+            >
+                <t t-foreach="boxes" t-as="box" t-key="box.id">
+                    <DraggableItem t-props="box" />
+                </t>
+            </iframe>
+        </div>
+    </t>
+
+    <t t-name="automation_flowchart.FlowchartItem" owl="1">
+        <div
+            class="bg-info"
+            t-ref="box"
+            t-att-style="'left: ' + state.position_x + 'px; top: ' + state.position_y + 'px;'"
+        >
+            Drag Me
+        </div>
+    </t>
+
+</templates>
